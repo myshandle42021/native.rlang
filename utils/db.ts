@@ -44,7 +44,7 @@ export const db = {
     }
   },
 
-  // RPC method for stored procedures - FIXES .rpc() ERRORS
+  // RPC method for stored procedures
   rpc: async (functionName: string, params: any = {}) => {
     const client = await pool.connect();
     try {
@@ -63,7 +63,7 @@ export const db = {
     }
   },
 
-  // Raw method for raw SQL expressions - FIXES .raw() ERRORS
+  // Raw method for raw SQL expressions
   raw: (expression: string) => {
     return {
       isRaw: true,
@@ -85,7 +85,7 @@ export const db = {
   },
 };
 
-// Query builder to match Supabase API
+// FIXED: Query builder that separates building from executing
 class PostgreSQLQueryBuilder {
   private table: string;
   private selectFields: string = "*";
@@ -95,22 +95,24 @@ class PostgreSQLQueryBuilder {
   private params: any[] = [];
   private paramCount: number = 0;
 
-  // NEW: Add missing properties for conflict resolution
+  // Conflict resolution properties
   private conflictClause: string = "";
   private conflictAction: string = "";
   private updateFields: Record<string, any> = {};
+  private insertData: any = null;
+  private updateData: any = null;
+  private isDeleteQuery: boolean = false;
 
   constructor(table: string) {
     this.table = table;
   }
 
-  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  // CHAINABLE METHODS - These build the query
   select(fields: string = "*"): PostgreSQLQueryBuilder {
     this.selectFields = fields;
     return this;
   }
 
-  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
   eq(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} = $${this.paramCount}`);
@@ -146,7 +148,6 @@ class PostgreSQLQueryBuilder {
     return this;
   }
 
-  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
   lt(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} < $${this.paramCount}`);
@@ -168,7 +169,6 @@ class PostgreSQLQueryBuilder {
     return this;
   }
 
-  // NEW: contains method for array operations - FIXES .contains() ERRORS
   contains(column: string, values: any[]): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} @> $${this.paramCount}`);
@@ -176,7 +176,7 @@ class PostgreSQLQueryBuilder {
     return this;
   }
 
-  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  // FIXED: on() method for conflict resolution - CHAINABLE
   on(conflict: string, action?: string): PostgreSQLQueryBuilder {
     this.conflictClause = `ON CONFLICT (${conflict})`;
     this.conflictAction = action || "DO NOTHING";
@@ -197,25 +197,117 @@ class PostgreSQLQueryBuilder {
     return this;
   }
 
-  // Execute SELECT query
+  // FIXED: insert() method - CHAINABLE, not async
+  insert(data: any | any[]): PostgreSQLQueryBuilder {
+    this.insertData = data;
+    return this;
+  }
+
+  // FIXED: update() method - CHAINABLE, not async
+  update(data: any): PostgreSQLQueryBuilder {
+    this.updateData = data;
+    this.updateFields = { ...data };
+    return this;
+  }
+
+  // FIXED: delete() method - CHAINABLE, not async
+  delete(): PostgreSQLQueryBuilder {
+    this.isDeleteQuery = true;
+    return this;
+  }
+
+  // EXECUTION METHODS - These actually run the query
   async execute(): Promise<{ data: any[] | null; error: any }> {
     try {
-      const whereClause =
-        this.whereConditions.length > 0
-          ? `WHERE ${this.whereConditions.join(" AND ")}`
-          : "";
+      let sql = "";
+      let queryParams = [...this.params];
 
-      const sql = `
-        SELECT ${this.selectFields}
-        FROM ${this.table}
-        ${whereClause}
-        ${this.orderByClause}
-        ${this.limitClause}
-      `.trim();
+      if (this.insertData) {
+        // INSERT query
+        const records = Array.isArray(this.insertData)
+          ? this.insertData
+          : [this.insertData];
+        if (records.length === 0) return { data: [], error: null };
+
+        const columns = Object.keys(records[0]);
+        const columnList = columns.join(", ");
+        const valueRows: string[] = [];
+        let paramIndex = this.paramCount + 1;
+
+        for (const record of records) {
+          const rowParams: string[] = [];
+          for (const column of columns) {
+            rowParams.push(`$${paramIndex++}`);
+            queryParams.push(record[column]);
+          }
+          valueRows.push(`(${rowParams.join(", ")})`);
+        }
+
+        sql = `INSERT INTO ${this.table} (${columnList}) VALUES ${valueRows.join(", ")}`;
+
+        // Handle conflict resolution
+        if (this.conflictClause) {
+          sql += ` ${this.conflictClause}`;
+          if (this.conflictAction === "DO NOTHING") {
+            sql += " DO NOTHING";
+          } else if (Object.keys(this.updateFields).length > 0) {
+            const updateList = Object.keys(this.updateFields).map((key) => {
+              if (
+                this.updateFields[key] &&
+                typeof this.updateFields[key] === "object" &&
+                this.updateFields[key].isRaw
+              ) {
+                return `${key} = ${this.updateFields[key].expression}`;
+              }
+              return `${key} = EXCLUDED.${key}`;
+            });
+            sql += ` DO UPDATE SET ${updateList.join(", ")}`;
+          }
+        }
+
+        sql += " RETURNING *";
+      } else if (this.updateData) {
+        // UPDATE query
+        if (this.whereConditions.length === 0) {
+          throw new Error("UPDATE requires WHERE conditions for safety");
+        }
+
+        const columns = Object.keys(this.updateData);
+        const setClause = columns
+          .map((col, index) => {
+            if (
+              this.updateData[col] &&
+              typeof this.updateData[col] === "object" &&
+              this.updateData[col].isRaw
+            ) {
+              return `${col} = ${this.updateData[col].expression}`;
+            }
+            queryParams.push(this.updateData[col]);
+            return `${col} = $${queryParams.length}`;
+          })
+          .join(", ");
+
+        sql = `UPDATE ${this.table} SET ${setClause} WHERE ${this.whereConditions.join(" AND ")} RETURNING *`;
+      } else if (this.isDeleteQuery) {
+        // DELETE query
+        if (this.whereConditions.length === 0) {
+          throw new Error("DELETE requires WHERE conditions for safety");
+        }
+
+        sql = `DELETE FROM ${this.table} WHERE ${this.whereConditions.join(" AND ")} RETURNING *`;
+      } else {
+        // SELECT query
+        const whereClause =
+          this.whereConditions.length > 0
+            ? `WHERE ${this.whereConditions.join(" AND ")}`
+            : "";
+        sql =
+          `SELECT ${this.selectFields} FROM ${this.table} ${whereClause} ${this.orderByClause} ${this.limitClause}`.trim();
+      }
 
       const client = await pool.connect();
       try {
-        const result = await client.query(sql, this.params);
+        const result = await client.query(sql, queryParams);
         return { data: result.rows, error: null };
       } finally {
         client.release();
@@ -233,155 +325,6 @@ class PostgreSQLQueryBuilder {
   catch(onReject: (error: any) => any) {
     return this.execute().catch(onReject);
   }
-
-  // ENHANCED: INSERT operation with conflict resolution
-  async insert(data: any | any[]): Promise<{ data: any[] | null; error: any }> {
-    try {
-      const isArray = Array.isArray(data);
-      const records = isArray ? data : [data];
-
-      if (records.length === 0) {
-        return { data: [], error: null };
-      }
-
-      // Get column names from first record
-      const columns = Object.keys(records[0]);
-      const columnList = columns.join(", ");
-
-      // Build parameterized values
-      const valueRows: string[] = [];
-      const allParams: any[] = [];
-      let paramIndex = 1;
-
-      for (const record of records) {
-        const rowParams: string[] = [];
-        for (const column of columns) {
-          rowParams.push(`$${paramIndex++}`);
-          allParams.push(record[column]);
-        }
-        valueRows.push(`(${rowParams.join(", ")})`);
-      }
-
-      let sql = `
-        INSERT INTO ${this.table} (${columnList})
-        VALUES ${valueRows.join(", ")}
-      `;
-
-      // NEW: Add conflict resolution if specified
-      if (this.conflictClause) {
-        sql += ` ${this.conflictClause}`;
-
-        if (this.conflictAction === "DO NOTHING") {
-          sql += " DO NOTHING";
-        } else if (Object.keys(this.updateFields).length > 0) {
-          // Handle DO UPDATE SET
-          const updateList = Object.keys(this.updateFields).map((key) => {
-            if (
-              this.updateFields[key] &&
-              typeof this.updateFields[key] === "object" &&
-              this.updateFields[key].isRaw
-            ) {
-              return `${key} = ${this.updateFields[key].expression}`;
-            }
-            return `${key} = EXCLUDED.${key}`;
-          });
-          sql += ` DO UPDATE SET ${updateList.join(", ")}`;
-        }
-      }
-
-      sql += " RETURNING *";
-
-      const client = await pool.connect();
-      try {
-        const result = await client.query(sql, allParams);
-        return { data: result.rows, error: null };
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return { data: null, error };
-    }
-  }
-
-  // ENHANCED: UPDATE operation - now supports chaining with .on()
-  async update(data: any): Promise<{ data: any[] | null; error: any }> {
-    try {
-      // Store update fields for potential use in conflict resolution
-      this.updateFields = { ...data };
-
-      if (this.whereConditions.length === 0) {
-        throw new Error("UPDATE requires WHERE conditions for safety");
-      }
-
-      const columns = Object.keys(data);
-      const setClause = columns
-        .map((col, index) => {
-          // Handle raw SQL expressions
-          if (data[col] && typeof data[col] === "object" && data[col].isRaw) {
-            return `${col} = ${data[col].expression}`;
-          }
-          return `${col} = $${this.params.length + index + 1}`;
-        })
-        .join(", ");
-
-      // Only add non-raw values to params
-      const updateParams = [
-        ...this.params,
-        ...columns
-          .filter(
-            (col) =>
-              !(data[col] && typeof data[col] === "object" && data[col].isRaw),
-          )
-          .map((col) => data[col]),
-      ];
-
-      const whereClause = `WHERE ${this.whereConditions.join(" AND ")}`;
-
-      const sql = `
-        UPDATE ${this.table}
-        SET ${setClause}
-        ${whereClause}
-        RETURNING *
-      `;
-
-      const client = await pool.connect();
-      try {
-        const result = await client.query(sql, updateParams);
-        return { data: result.rows, error: null };
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return { data: null, error };
-    }
-  }
-
-  // DELETE operation
-  async delete(): Promise<{ data: any[] | null; error: any }> {
-    try {
-      if (this.whereConditions.length === 0) {
-        throw new Error("DELETE requires WHERE conditions for safety");
-      }
-
-      const whereClause = `WHERE ${this.whereConditions.join(" AND ")}`;
-
-      const sql = `
-        DELETE FROM ${this.table}
-        ${whereClause}
-        RETURNING *
-      `;
-
-      const client = await pool.connect();
-      try {
-        const result = await client.query(sql, this.params);
-        return { data: result.rows, error: null };
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return { data: null, error };
-    }
-  }
 }
 
 // Database utilities
@@ -390,7 +333,6 @@ export const dbUtils = {
   migrate: async () => {
     const client = await pool.connect();
     try {
-      // Check if migrations table exists
       const migrationCheck = await client.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.tables
@@ -429,38 +371,4 @@ export const dbUtils = {
       client.release();
     }
   },
-
-  // Get database stats
-  getStats: async () => {
-    const client = await pool.connect();
-    try {
-      const stats = await client.query(`
-        SELECT
-          schemaname,
-          tablename,
-          n_tup_ins as inserts,
-          n_tup_upd as updates,
-          n_tup_del as deletes,
-          n_live_tup as live_rows,
-          n_dead_tup as dead_rows
-        FROM pg_stat_user_tables
-        ORDER BY n_live_tup DESC;
-      `);
-
-      return stats.rows;
-    } finally {
-      client.release();
-    }
-  },
 };
-
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("🔌 Closing database connections...");
-  await pool.end();
-});
-
-process.on("SIGTERM", async () => {
-  console.log("🔌 Closing database connections...");
-  await pool.end();
-});
