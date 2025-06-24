@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables (CRITICAL - never commit these!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+backups/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+
+# Database files (if any local sqlite)
+*.db
+*.sqlite
+
+# Generated service files (these will be auto-generated)
+utils/generated-*.ts
+
+# Credential files
+credentials/
+secrets/
+*.key
+*.pem
+*.crt
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+
+# Lock files (choose one)
+# package-lock.json  # Uncomment if you use yarn
+# yarn.lock         # Uncomment if you use npm

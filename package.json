@@ -1,0 +1,44 @@
+{
+  "name": "rol3",
+  "version": "1.0.0",
+  "description": "ROL3 - Native RLang Agent Ecosystem with Self-Healing and Evolution",
+  "main": "dist/runtime/bootstrap.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx runtime/bootstrap.ts",
+    "start": "node dist/runtime/bootstrap.js",
+    "bootstrap": "npm run build && npm run start",
+    "test": "tsx cli/run.ts",
+    "clean": "rm -rf dist/ && rm -rf r/agents/*.r && rm -rf r/clients/",
+    "health": "tsx -e \"import('./runtime/interpreter.js').then(m => m.runSystemOperation('diagnose'))\"",
+    "db:setup": "node -e \"import('./utils/db.js').then(m => m.dbUtils.migrate())\"",
+    "db:clean": "node -e \"import('./utils/db.js').then(m => m.dbUtils.cleanup())\""
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.4.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.24.3",
+    "js-yaml": "^4.1.0",
+    "pg": "^8.11.3",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.9",
+    "@types/pg": "^8.10.7",
+    "tsx": "^4.1.4",
+    "typescript": "^5.2.2"
+  },
+  "keywords": [
+    "rlang",
+    "agents",
+    "automation",
+    "self-healing",
+    "ai"
+  ],
+  "author": "ROL3 Architect",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
