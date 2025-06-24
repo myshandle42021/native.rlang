@@ -1,7 +1,7 @@
 // server/webhook-handler.ts
 // Express.js webhook endpoint for RocketChat integration
 
-import express, { RequestHandler, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
 
@@ -21,11 +21,8 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-// FIXED: Properly typed RequestHandler for Express 5.x
-const handleRocketChatWebhook: RequestHandler = async (
-  req: Request,
-  res: Response,
-) => {
+// FIXED: Let TypeScript infer the handler type for Express 5.x
+const handleRocketChatWebhook = async (req: Request, res: Response) => {
   try {
     console.log("RocketChat webhook received:", req.body);
 
@@ -89,11 +86,8 @@ const handleRocketChatWebhook: RequestHandler = async (
   }
 };
 
-// FIXED: Properly typed RequestHandler for buttons
-const handleRocketChatButtons: RequestHandler = async (
-  req: Request,
-  res: Response,
-) => {
+// FIXED: Let TypeScript infer the handler type for buttons
+const handleRocketChatButtons = async (req: Request, res: Response) => {
   try {
     const payload = req.body;
 
@@ -143,8 +137,8 @@ const handleRocketChatButtons: RequestHandler = async (
   }
 };
 
-// FIXED: Properly typed RequestHandler for health check
-const handleHealthCheck: RequestHandler = (req: Request, res: Response) => {
+// FIXED: Let TypeScript infer the handler type for health check
+const handleHealthCheck = (req: Request, res: Response) => {
   res.status(200).json({
     status: "healthy",
     service: "rocketchat-webhook",
