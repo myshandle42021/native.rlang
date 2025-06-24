@@ -264,20 +264,21 @@ export async function cleanupOldLearningData(args: any, context: RLangContext) {
     Date.now() - retentionDays * 24 * 60 * 60 * 1000,
   ).toISOString();
 
-  // CRITICAL FIX: Proper database query with await - this was line 270 error
-  const { data: deleted, error } = await db
+  // CRITICAL FIX: Build query first, then await it
+  const deleteQuery = db
     .from("learning_events")
-    .select("*")
     .delete()
     .lt("timestamp", cutoffDate);
-  const { data: deleted, error } = await deleteQuery;
+  const { data: deletedRecords, error: deleteError } = await deleteQuery;
 
-  if (error)
-    throw new Error(`Learning data cleanup failed: ${getErrorMessage(error)}`);
+  if (deleteError)
+    throw new Error(
+      `Learning data cleanup failed: ${getErrorMessage(deleteError)}`,
+    );
 
   return {
     cleaned: true,
-    deleted_count: deleted?.length || 0,
+    deleted_count: deletedRecords?.length || 0,
     cutoff_date: cutoffDate,
   };
 }
