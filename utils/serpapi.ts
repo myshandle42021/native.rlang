@@ -1,6 +1,17 @@
 // utils/serpapi.ts - SerpAPI Integration for Dynamic Service Discovery
 import { RLangContext } from "../schema/types";
 
+// Production-ready error type guard
+function isError(error: unknown): error is Error {
+  return error instanceof Error;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (isError(error)) return error.message;
+  if (typeof error === "string") return error;
+  return String(error);
+}
+
 const SERPAPI_KEY = process.env.SERPAPI_API_KEY;
 
 export async function search(args: any, context: RLangContext) {
@@ -48,7 +59,7 @@ export async function search(args: any, context: RLangContext) {
       );
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as any;
 
     // Process and filter results based on focus areas
     const processedResults = processSearchResults(data, focus);
@@ -64,7 +75,7 @@ export async function search(args: any, context: RLangContext) {
     console.error("SerpAPI search failed:", error);
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
       results: [],
     };
   }
@@ -82,7 +93,7 @@ function processSearchResults(data: any, focus: string[]) {
       source_type: identifySourceType(result.link),
       content_indicators: extractContentIndicators(result),
     }))
-    .sort((a, b) => b.relevance_score - a.relevance_score);
+    .sort((a: any, b: any) => b.relevance_score - a.relevance_score);
 }
 
 function calculateRelevanceScore(result: any, focus: string[]) {
@@ -145,7 +156,7 @@ function extractContentIndicators(result: any) {
 export async function scrapeDocumentation(args: any, context: RLangContext) {
   const { urls, max_pages = 5, focus_sections = [] } = args;
 
-  const scrapedContent = [];
+  const scrapedContent: any[] = [];
   let processedPages = 0;
 
   for (const url of urls.slice(0, max_pages)) {
@@ -158,7 +169,7 @@ export async function scrapeDocumentation(args: any, context: RLangContext) {
         processedPages++;
       }
     } catch (error) {
-      console.warn(`Failed to scrape ${url}:`, error.message);
+      console.warn(`Failed to scrape ${url}:`, getErrorMessage(error));
     }
   }
 
@@ -197,7 +208,7 @@ async function scrapePageContent(url: string, focusSections: string[]) {
 
 function extractRelevantSections(html: string, focusSections: string[]) {
   // Simple content extraction - in production, use a proper HTML parser
-  const sections = {
+  const sections: Record<string, any[]> = {
     authentication: extractSection(html, ["auth", "token", "key", "oauth"]),
     endpoints: extractSection(html, ["endpoint", "api", "rest", "url"]),
     examples: extractSection(html, ["example", "sample", "curl", "code"]),
@@ -207,8 +218,8 @@ function extractRelevantSections(html: string, focusSections: string[]) {
 
   // Filter to focus sections if specified
   if (focusSections.length > 0) {
-    const filtered = {};
-    focusSections.forEach((section) => {
+    const filtered: Record<string, any[]> = {};
+    focusSections.forEach((section: string) => {
       if (sections[section]) {
         filtered[section] = sections[section];
       }
@@ -221,7 +232,7 @@ function extractRelevantSections(html: string, focusSections: string[]) {
 
 function extractSection(html: string, keywords: string[]) {
   // Simplified extraction - look for content near keywords
-  const content = [];
+  const content: any[] = [];
 
   keywords.forEach((keyword) => {
     const regex = new RegExp(`(.{0,200}${keyword}.{0,200})`, "gi");
