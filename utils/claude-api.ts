@@ -64,7 +64,8 @@ export async function analyzeAPIDocumentation(
     }
 
     const data = await response.json();
-    const analysisText = data.content[0].text;
+    if (data && data.content && Array.isArray(data.content) && data.content[0]) {
+      const analysisText = data.content[0].text;
 
     // Parse Claude's structured response
     const parsedAnalysis = parseClaudeAnalysis(analysisText);

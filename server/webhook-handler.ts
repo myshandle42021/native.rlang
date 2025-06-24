@@ -1,7 +1,7 @@
 // server/webhook-handler.ts
 // Express.js webhook endpoint for RocketChat integration
 
-import express from "express";
+import express, { Request, Response } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
 import { Request, Response } from "express";
@@ -48,8 +48,6 @@ app.post("/webhooks/rocketchat", async (req: Request, res: Response) => {
         channel: payload.message.channel_id,
         messageId: payload.message.message_id,
         text: payload.message.text,
-        //timestamp: payload.message.timestamp, commented out since line is not in the expected type
-        type: payload.message.type || "message",
       },
     );
 

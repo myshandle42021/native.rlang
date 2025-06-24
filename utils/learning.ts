@@ -48,7 +48,7 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
 }
 
 export async function queryLearningEvents(args: any, context: RLangContext) {
-  let query = db.from("learning_events");
+  let query = db.from("learning_events").select("*");
 
   if (args.agent_id) query = query.eq("agent_id", args.agent_id);
   if (args.since) query = query.gte("timestamp", args.since);
@@ -91,7 +91,7 @@ export async function storeAgentPattern(args: any, context: RLangContext) {
 }
 
 export async function queryAgentPatterns(args: any, context: RLangContext) {
-  let query = db.from("agent_patterns");
+  let query = db.from("agent_patterns").select("*");
 
   if (args.pattern_type) query = query.eq("pattern_type", args.pattern_type);
   if (args.discovered_by) query = query.eq("discovered_by", args.discovered_by);
@@ -264,6 +264,7 @@ export async function cleanupOldLearningData(args: any, context: RLangContext) {
     Date.now() - retentionDays * 24 * 60 * 60 * 1000,
   ).toISOString();
 
+  // CRITICAL FIX: Proper database query with await - this was line 270 error
   const { data: deleted, error } = await db
     .from("learning_events")
     .delete()
@@ -304,7 +305,7 @@ export async function validateLearningTables(args: any, context: RLangContext) {
       );
 
       // CRITICAL FIX: Proper index access with typing
-      results[table] = !error && data?.[0]?.exists;
+      results[table] = !error && data?.[0]?.exists === true;
     } catch (err) {
       // CRITICAL FIX: Proper index access with typing
       results[table] = false;

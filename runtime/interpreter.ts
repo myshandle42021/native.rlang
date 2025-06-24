@@ -200,6 +200,17 @@ export async function testRCDResolution(
       return { success: false, error: "RCD not initialized" };
     }
 
+    const args = {
+      agentId: "test",
+      clientId: clientId || "default",
+      operation: "resolve_file_path",
+      input: { fileId },
+      memory: {},
+      trace: [],
+      user: "system",
+      channel: undefined,
+    };
+
     const context: RLangContext = {
       agentId: args.agentId || "unknown",
       clientId: args.clientId || "default",

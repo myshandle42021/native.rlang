@@ -123,9 +123,10 @@ async function executeModuleFunction(
   } catch (error) {
     // 🎯 AUTO-GENERATION TRIGGER - This is the magic moment!
     if (
-      error.message.includes("Cannot resolve module") ||
-      error.message.includes("ENOENT") ||
-      error.message.includes("does not provide an export")
+      error instanceof Error &&
+      (error.message.includes("Cannot resolve module") ||
+        error.message.includes("ENOENT") ||
+        error.message.includes("does not provide an export"))
     ) {
       console.log(
         `🪄 Service Integration Magic: Auto-generating ${module} module...`,
@@ -254,7 +255,7 @@ async function executeModuleFunction(
           retryError,
         );
         throw new Error(
-          `Generated module execution failed: ${retryError.message}`,
+          `Generated module execution failed: ${retryError instanceof Error ? retryError.message : String(retryError)}`,
         );
       }
     }

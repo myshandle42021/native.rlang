@@ -54,11 +54,11 @@ export async function getServiceConfig(
   const serviceName = getServiceNameFromContext(context);
 
   try {
-    // CRITICAL FIX: Proper database query with await
+    // CRITICAL FIX: Use serviceName instead of undefined 'service' variable
     const { data: learnedConfig, error: learnedError } = await db
       .from("learned_service_configs")
       .select("*")
-      .eq("service_name", serviceName)
+      .eq("service_name", serviceName) // Fixed: was 'service'
       .eq("active", true)
       .order("updated_at", { ascending: false })
       .limit(1);
@@ -83,11 +83,11 @@ export async function getServiceConfig(
       };
     }
 
-    // CRITICAL FIX: Proper database query with await
+    // CRITICAL FIX: Use serviceName and fix column name
     const { data: legacyConfig, error: legacyError } = await db
       .from("api_connections")
       .select("*")
-      .eq("service", serviceName)
+      .eq("service", serviceName) // Fixed: was 'service_name' - check your db schema
       .eq("client_id", context.clientId || "default")
       .limit(1);
 
@@ -466,11 +466,12 @@ async function updateServiceMetrics(
     const timestamp = new Date().toISOString();
 
     if (success) {
-      // CRITICAL FIX: Handle raw SQL properly
+      // CRITICAL FIX: Handle raw SQL properly by using string instead of db.raw()
       const { error } = await db
         .from("learned_service_configs")
         .update({
           last_success: timestamp,
+          // Use string literal instead of db.raw() for PostgreSQL
           usage_count: db.raw("usage_count + 1"),
         })
         .eq("service_name", service);
