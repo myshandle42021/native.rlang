@@ -20,6 +20,12 @@ operations:
         checks: ["database", "file_system", "memory", "dependencies"]
         failure_action: "abort_with_diagnostics"
 
+    # Phase 1.5: RCD Metadata Bootstrap (NEW)
+    - ensure_rcd_metadata:
+        action: { run: ["r/system/rcd-bootstrap-check.r", "ensure_rcd_ready"] }
+        timeout: "15s"
+        critical: true
+
     # Phase 2: Core Infrastructure
     - initialize_core_infrastructure:
         systems: ["database_pool", "logging", "signal_handlers"]
