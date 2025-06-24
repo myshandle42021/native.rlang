@@ -63,24 +63,41 @@ export async function analyzeAPIDocumentation(
       );
     }
 
-    const data = await response.json();
-    if (data && data.content && Array.isArray(data.content) && data.content[0]) {
+    const data: any = await response.json();
+
+    // CRITICAL FIX: Add proper type checking and missing closing brace
+    if (
+      data &&
+      data.content &&
+      Array.isArray(data.content) &&
+      data.content[0]
+    ) {
       const analysisText = data.content[0].text;
 
-    // Parse Claude's structured response
-    const parsedAnalysis = parseClaudeAnalysis(analysisText);
+      // Parse Claude's structured response
+      const parsedAnalysis = parseClaudeAnalysis(analysisText);
 
-    // Calculate confidence score based on completeness
-    const confidenceScore = calculateAnalysisConfidence(parsedAnalysis);
+      // Calculate confidence score based on completeness
+      const confidenceScore = calculateAnalysisConfidence(parsedAnalysis);
 
-    return {
-      success: true,
-      analysis: parsedAnalysis,
-      confidence_score: confidenceScore,
-      token_usage: data.usage || {},
-      sources_analyzed: documentation_sources?.length || 0,
-      raw_response: analysisText,
-    };
+      return {
+        success: true,
+        analysis: parsedAnalysis,
+        confidence_score: confidenceScore,
+        token_usage: data.usage || {},
+        sources_analyzed: documentation_sources?.length || 0,
+        raw_response: analysisText,
+      };
+    } else {
+      // Handle case where API response doesn't have expected structure
+      return {
+        success: false,
+        error: "Invalid API response structure",
+        analysis: null,
+        confidence_score: 0,
+      };
+    }
+    // CRITICAL FIX: This closing brace was missing!
   } catch (error) {
     console.error("Claude API analysis failed:", error);
     return {
