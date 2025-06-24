@@ -61,6 +61,16 @@ rcd:
     }
 
 operations:
+  default:
+    - tamr.log: { event: "system_doctor_started", timestamp: "${timestamp}" }
+    - rcd.write:
+        table: "system_health"
+        data: { status: "monitoring", last_check: "${timestamp}", doctor_version: "2.1.0" }
+    # RCD Registration
+    - rcd_register_agent: {}
+    - rcd_initialize_learning: {}
+    - return: { healthy: true, timestamp: "${timestamp}", status: "system_doctor_ready" }
+
   initialize:
     - tamr.log: { event: "system_doctor_started", timestamp: "${timestamp}" }
     - rcd.write:
