@@ -1,33 +1,38 @@
 // runtime/interpreter.ts
 // MINIMAL TypeScript - 90/10 rule compliant
-// CRITICAL FIX #4: Fixed operation name alignment for RCD resolution
+// CRITICAL FIX #5: Disabled RCD initialization to prevent infinite recursion
 
 import { loadRFile } from "./loader";
 import { createContext } from "./context";
 import { executeSteps } from "./step-executor";
 import { RLangContext, RLangResult } from "../schema/types";
 
-// CRITICAL FIX #4: RCD delegation with FIXED operation name
+// CRITICAL FIX #5: RCD delegation disabled to prevent circular calls
 let rcdFileResolver: Function | null = null;
 
 async function initRCD(): Promise<void> {
   if (rcdFileResolver) return;
 
   try {
-    rcdFileResolver = async (fileId: string, context: RLangContext) => {
-      const result = await runRLang({
-        file: "r/system/dynamic-linker.r",
-        operation: "resolve_capability", // CRITICAL FIX #4: Changed from "resolve_file_path"
-        input: {
-          capability: `file_resolution_${fileId}`, // CRITICAL FIX #4: Map to capability format
-          file_id: fileId,
-          client_id: context.clientId,
-          resolution_type: "file_path", // Indicate this is file resolution
-        },
-        context,
-      });
-      return result.success ? result.result?.resolved_path : null;
-    };
+    // CRITICAL FIX #5: Commenting out to prevent infinite recursion
+    // The issue: runRLang calls initRCD, which creates a resolver that calls runRLang again!
+    // rcdFileResolver = async (fileId: string, context: RLangContext) => {
+    //   const result = await runRLang({  // ← THIS CAUSES INFINITE RECURSION!
+    //     file: "r/system/dynamic-linker.r",
+    //     operation: "resolve_capability",
+    //     input: {
+    //       capability: `file_resolution_${fileId}`,
+    //       file_id: fileId,
+    //       client_id: context.clientId,
+    //       resolution_type: "file_path",
+    //     },
+    //     context,
+    //   });
+    //   return result.success ? result.result?.resolved_path : null;
+    // };
+
+    // Temporary disable RCD file resolution
+    rcdFileResolver = null;
   } catch (error) {
     console.warn("RCD file resolver init failed:", error);
     rcdFileResolver = () => null;
@@ -44,7 +49,8 @@ export interface RunRLangOptions {
 
 // ENHANCED: Try RCD file resolution with FIXED operation name, fallback unchanged
 export async function runRLang(options: RunRLangOptions): Promise<RLangResult> {
-  await initRCD();
+  // CRITICAL FIX #5: Comment out RCD initialization to prevent infinite recursion
+  // await initRCD();
 
   const {
     file,
@@ -57,18 +63,18 @@ export async function runRLang(options: RunRLangOptions): Promise<RLangResult> {
   let resolvedFilePath = file;
 
   try {
-    // TRY: RCD file resolution (FIXED: now uses correct operation name)
-    if (rcdFileResolver) {
-      const rcdPath = await rcdFileResolver(file, {
-        agentId: "interpreter",
-        clientId: clientId || "system",
-      } as RLangContext);
+    // CRITICAL FIX #5: Comment out RCD file resolution to prevent infinite recursion
+    // if (rcdFileResolver) {
+    //   const rcdPath = await rcdFileResolver(file, {
+    //     agentId: "interpreter",
+    //     clientId: clientId || "system",
+    //   } as RLangContext);
 
-      if (rcdPath) {
-        resolvedFilePath = rcdPath;
-        console.log(`🔗 RCD resolved file: ${file} -> ${rcdPath}`);
-      }
-    }
+    //   if (rcdPath) {
+    //     resolvedFilePath = rcdPath;
+    //     console.log(`🔗 RCD resolved file: ${file} -> ${rcdPath}`);
+    //   }
+    // }
 
     // UNCHANGED: Load file (with intelligent fallback)
     let rData;
@@ -280,5 +286,5 @@ export async function checkInterpreterHealth(): Promise<{
   return health;
 }
 
-// Initialize RCD on module load
-initRCD().catch(console.warn);
+// CRITICAL FIX #5: Comment out module-level RCD initialization to prevent immediate recursion
+// initRCD().catch(console.warn);
