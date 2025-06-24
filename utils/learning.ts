@@ -270,6 +270,7 @@ export async function cleanupOldLearningData(args: any, context: RLangContext) {
     .select("*")
     .delete()
     .lt("timestamp", cutoffDate);
+  const { data: deleted, error } = await deleteQuery;
 
   if (error)
     throw new Error(`Learning data cleanup failed: ${getErrorMessage(error)}`);

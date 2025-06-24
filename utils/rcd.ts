@@ -104,16 +104,16 @@ export async function scanFiles(args: any, context: RLangContext) {
 // ================================
 
 export async function storeFileMetadata(args: any, context: RLangContext) {
-  // CRITICAL FIX: Proper database insert with conflict resolution
-  const { data, error } = await db
+  // CRITICAL FIX: Build query first, then await it
+  const fileInsertQuery = db
     .from("rcd_files")
-    .select("*")
     .insert(args)
     .on("conflict", "file_path")
     .update({
       ...args,
       updated_at: new Date(),
     });
+  const { data, error } = await fileInsertQuery;
 
   if (error)
     throw new Error(`Metadata storage failed: ${getErrorMessage(error)}`);
@@ -161,10 +161,9 @@ export async function queryPatterns(args: any, context: RLangContext) {
 }
 
 export async function storeCapability(args: any, context: RLangContext) {
-  // CRITICAL FIX: Proper database upsert with conflict resolution
-  const { data, error } = await db
+  // CRITICAL FIX: Build query first, then await it
+  const capabilityInsertQuery = db
     .from("rcd_capabilities")
-    .select("*")
     .insert(args)
     .on("conflict", "capability_name")
     .update({
@@ -172,6 +171,7 @@ export async function storeCapability(args: any, context: RLangContext) {
       usage_frequency: db.raw("usage_frequency + 1"),
       updated_at: new Date(),
     });
+  const { data, error } = await capabilityInsertQuery;
 
   if (error)
     throw new Error(`Capability storage failed: ${getErrorMessage(error)}`);
