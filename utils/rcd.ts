@@ -7,26 +7,40 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { createHash } from "crypto";
 
+// Production-ready error type guard
+function isError(error: unknown): error is Error {
+  return error instanceof Error;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (isError(error)) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 // ================================
 // CORE DATABASE OPERATIONS (unchanged)
 // ================================
 
 export async function query(sql: string, context: RLangContext) {
   const { data, error } = await db.rpc("execute_sql", { sql_query: sql });
-  if (error) throw new Error(`SQL query failed: ${error.message}`);
+  if (error) throw new Error(`SQL query failed: ${getErrorMessage(error)}`);
   return data;
 }
 
 export async function execute_sql(sql: string, context: RLangContext) {
   const { data, error } = await db.rpc("execute_sql", { sql_query: sql });
-  if (error) throw new Error(`SQL execution failed: ${error.message}`);
+  if (error) throw new Error(`SQL execution failed: ${getErrorMessage(error)}`);
   return { success: true, result: data };
 }
 
 export async function executeSQL(args: any, context: RLangContext) {
   const { sql, params = [] } = args;
   const { data, error } = await db.query(sql, params);
-  if (error) throw new Error(`SQL execution failed: ${error.message}`);
+  if (error) throw new Error(`SQL execution failed: ${getErrorMessage(error)}`);
   return data;
 }
 
@@ -41,7 +55,9 @@ export async function readFileContent(args: any, context: RLangContext) {
     const hash = createHash("sha256").update(content).digest("hex");
     return { content, hash };
   } catch (error) {
-    throw new Error(`Failed to read file ${filePath}: ${error.message}`);
+    throw new Error(
+      `Failed to read file ${filePath}: ${getErrorMessage(error)}`,
+    );
   }
 }
 
@@ -49,7 +65,7 @@ export async function scanFiles(args: any, context: RLangContext) {
   const { directory = "./", extensions = [".ts", ".r", ".js", ".json"] } = args;
 
   try {
-    const files = [];
+    const files: any[] = [];
 
     async function scan(dir: string) {
       const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -79,7 +95,7 @@ export async function scanFiles(args: any, context: RLangContext) {
     await scan(directory);
     return files;
   } catch (error) {
-    throw new Error(`Directory scan failed: ${error.message}`);
+    throw new Error(`Directory scan failed: ${getErrorMessage(error)}`);
   }
 }
 
@@ -97,7 +113,8 @@ export async function storeFileMetadata(args: any, context: RLangContext) {
       updated_at: new Date(),
     });
 
-  if (error) throw new Error(`Metadata storage failed: ${error.message}`);
+  if (error)
+    throw new Error(`Metadata storage failed: ${getErrorMessage(error)}`);
   return { stored: true, data };
 }
 
@@ -111,13 +128,15 @@ export async function queryFileMetadata(args: any, context: RLangContext) {
   if (args.limit) query = query.limit(args.limit);
 
   const { data, error } = await query;
-  if (error) throw new Error(`Metadata query failed: ${error.message}`);
+  if (error)
+    throw new Error(`Metadata query failed: ${getErrorMessage(error)}`);
   return data || [];
 }
 
 export async function storePattern(args: any, context: RLangContext) {
   const { data, error } = await db.from("rcd_patterns").insert(args);
-  if (error) throw new Error(`Pattern storage failed: ${error.message}`);
+  if (error)
+    throw new Error(`Pattern storage failed: ${getErrorMessage(error)}`);
   return { stored: true, pattern_id: data?.[0]?.id };
 }
 
@@ -133,7 +152,7 @@ export async function queryPatterns(args: any, context: RLangContext) {
   query = query.order("confidence_score", { ascending: false });
 
   const { data, error } = await query;
-  if (error) throw new Error(`Pattern query failed: ${error.message}`);
+  if (error) throw new Error(`Pattern query failed: ${getErrorMessage(error)}`);
   return data || [];
 }
 
@@ -148,7 +167,8 @@ export async function storeCapability(args: any, context: RLangContext) {
       updated_at: new Date(),
     });
 
-  if (error) throw new Error(`Capability storage failed: ${error.message}`);
+  if (error)
+    throw new Error(`Capability storage failed: ${getErrorMessage(error)}`);
   return { stored: true, data };
 }
 
@@ -165,7 +185,8 @@ export async function queryCapabilities(args: any, context: RLangContext) {
     query = query.contains("compatible_with", [args.compatible_with]);
 
   const { data, error } = await query;
-  if (error) throw new Error(`Capability query failed: ${error.message}`);
+  if (error)
+    throw new Error(`Capability query failed: ${getErrorMessage(error)}`);
   return data || [];
 }
 
@@ -177,7 +198,8 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
   };
 
   const { data, error } = await db.from("rcd_learning_events").insert(event);
-  if (error) throw new Error(`Learning event storage failed: ${error.message}`);
+  if (error)
+    throw new Error(`Learning event storage failed: ${getErrorMessage(error)}`);
   return { stored: true, event_id: data?.[0]?.id };
 }
 
@@ -198,7 +220,8 @@ export async function registerAgent(args: any, context: RLangContext) {
     status: "active",
   });
 
-  if (error) throw new Error(`Agent registration failed: ${error.message}`);
+  if (error)
+    throw new Error(`Agent registration failed: ${getErrorMessage(error)}`);
   return { registered: true, data };
 }
 
@@ -210,7 +233,8 @@ export async function queryAgentCapabilities(args: any, context: RLangContext) {
     query = query.contains("capabilities", [args.capability]);
 
   const { data, error } = await query;
-  if (error) throw new Error(`Agent capability query failed: ${error.message}`);
+  if (error)
+    throw new Error(`Agent capability query failed: ${getErrorMessage(error)}`);
   return data || [];
 }
 
@@ -224,7 +248,8 @@ export async function logPerformance(args: any, context: RLangContext) {
     context_data: args.context || {},
   });
 
-  if (error) throw new Error(`Performance logging failed: ${error.message}`);
+  if (error)
+    throw new Error(`Performance logging failed: ${getErrorMessage(error)}`);
   return { logged: true, log_id: data?.[0]?.id };
 }
 
@@ -242,7 +267,7 @@ export async function initializeLearningTracking(
 
   if (error)
     throw new Error(
-      `Learning tracking initialization failed: ${error.message}`,
+      `Learning tracking initialization failed: ${getErrorMessage(error)}`,
     );
   return { initialized: true, tracking_id: data?.[0]?.id };
 }
@@ -261,7 +286,9 @@ export async function initializeRoutingSystem(
   });
 
   if (error)
-    throw new Error(`Routing system initialization failed: ${error.message}`);
+    throw new Error(
+      `Routing system initialization failed: ${getErrorMessage(error)}`,
+    );
   return { initialized: true, routing_id: data?.[0]?.id };
 }
 
@@ -390,7 +417,7 @@ export async function query_files(args: any, context: RLangContext) {
   }
 
   const { data, error } = await query.limit(20);
-  if (error) throw new Error(`File query failed: ${error.message}`);
+  if (error) throw new Error(`File query failed: ${getErrorMessage(error)}`);
 
   // Return resolved path for first match if looking for specific file
   if (args.file_pattern && data && data.length > 0) {
@@ -450,7 +477,7 @@ export async function createTables(args: any, context: RLangContext) {
     WHERE table_name LIKE 'rcd_%'
   `);
 
-  if (error) throw new Error(`Table check failed: ${error.message}`);
+  if (error) throw new Error(`Table check failed: ${getErrorMessage(error)}`);
 
   const expectedTables = [
     "rcd_files",
@@ -464,7 +491,7 @@ export async function createTables(args: any, context: RLangContext) {
     "rcd_knowledge_transfers",
   ];
 
-  const existingTables = data?.map((row) => row.table_name) || [];
+  const existingTables = data?.map((row: any) => row.table_name) || [];
   const missingTables = expectedTables.filter(
     (table) => !existingTables.includes(table),
   );
