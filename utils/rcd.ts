@@ -107,6 +107,7 @@ export async function storeFileMetadata(args: any, context: RLangContext) {
   // CRITICAL FIX: Proper database insert with conflict resolution
   const { data, error } = await db
     .from("rcd_files")
+    .select("*")
     .insert(args)
     .on("conflict", "file_path")
     .update({
@@ -163,6 +164,7 @@ export async function storeCapability(args: any, context: RLangContext) {
   // CRITICAL FIX: Proper database upsert with conflict resolution
   const { data, error } = await db
     .from("rcd_capabilities")
+    .select("*")
     .insert(args)
     .on("conflict", "capability_name")
     .update({

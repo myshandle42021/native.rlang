@@ -4,7 +4,6 @@
 import express, { Request, Response } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
-import { Request, Response } from "express";
 
 const app = express();
 app.use(express.json());
@@ -48,6 +47,8 @@ app.post("/webhooks/rocketchat", async (req: Request, res: Response) => {
         channel: payload.message.channel_id,
         messageId: payload.message.message_id,
         text: payload.message.text,
+        button: payload.message.button,
+        context: payload.message.context,
       },
     );
 
@@ -85,14 +86,14 @@ app.post("/webhooks/rocketchat", async (req: Request, res: Response) => {
   }
 });
 
-// CRITICAL FIX: Button response endpoint with proper data mapping
+// Button response endpoint with proper data mapping
 app.post(
   "/webhooks/rocketchat/buttons",
   async (req: Request, res: Response) => {
     try {
       const payload = req.body;
 
-      // CRITICAL FIX: Extract button action data from payload first
+      // Extract button action data from payload
       const rawButtonData = {
         user_id: payload.user?._id || payload.user_id,
         username: payload.user?.username || payload.username,
@@ -103,7 +104,7 @@ app.post(
         original_message: payload.message?.msg || payload.original_message,
       };
 
-      // CRITICAL FIX: Map to expected interface (was using undefined buttonData)
+      // Map to expected interface
       const buttonData = {
         userId: rawButtonData.user_id,
         username: rawButtonData.username,

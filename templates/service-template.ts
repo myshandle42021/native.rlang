@@ -377,6 +377,7 @@ async function updateUserCredentials(
         credentials: newCredentials,
         updated_at: new Date().toISOString(),
       })
+      .select("*")
       .eq("service", service)
       .eq("user_id", userId);
 
@@ -474,6 +475,7 @@ async function updateServiceMetrics(
           // Use string literal instead of db.raw() for PostgreSQL
           usage_count: db.raw("usage_count + 1"),
         })
+        .select("*")
         .eq("service_name", service);
 
       if (error) {
@@ -488,6 +490,7 @@ async function updateServiceMetrics(
         .update({
           last_failure: timestamp,
         })
+        .select("*")
         .eq("service_name", service);
 
       if (error) {

@@ -267,6 +267,7 @@ export async function cleanupOldLearningData(args: any, context: RLangContext) {
   // CRITICAL FIX: Proper database query with await - this was line 270 error
   const { data: deleted, error } = await db
     .from("learning_events")
+    .select("*")
     .delete()
     .lt("timestamp", cutoffDate);
 
