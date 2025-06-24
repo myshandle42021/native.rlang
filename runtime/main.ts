@@ -1,7 +1,7 @@
 // runtime/main.ts - Actual startup script for ROL3
 
-import { runRLang } from "./interpreter.js";
-import { connectDatabase } from "./bootstrap.js";
+import { runRLang } from "./interpreter";
+import { connectDatabase } from "./bootstrap";
 
 process.on("unhandledRejection", (reason) => {
   console.error("🚨 Unhandled Rejection:", reason);
