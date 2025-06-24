@@ -1,7 +1,7 @@
 // server/webhook-handler.ts
 // Express.js webhook endpoint for RocketChat integration
 
-import express from "express";
+import express, { RequestHandler, Request, Response } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
 
@@ -21,8 +21,11 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-// FIXED: Express 5.x compatible route handlers
-app.post("/webhooks/rocketchat", async function (req, res) {
+// FIXED: Properly typed RequestHandler for Express 5.x
+const handleRocketChatWebhook: RequestHandler = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     console.log("RocketChat webhook received:", req.body);
 
@@ -84,10 +87,13 @@ app.post("/webhooks/rocketchat", async function (req, res) {
       error: getErrorMessage(error),
     });
   }
-});
+};
 
-// FIXED: Express 5.x compatible route handlers
-app.post("/webhooks/rocketchat/buttons", async function (req, res) {
+// FIXED: Properly typed RequestHandler for buttons
+const handleRocketChatButtons: RequestHandler = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const payload = req.body;
 
@@ -135,16 +141,21 @@ app.post("/webhooks/rocketchat/buttons", async function (req, res) {
     console.error("Button response error:", error);
     res.status(500).json({ error: getErrorMessage(error) });
   }
-});
+};
 
-// FIXED: Express 5.x compatible route handlers
-app.get("/webhooks/rocketchat/health", function (req, res) {
+// FIXED: Properly typed RequestHandler for health check
+const handleHealthCheck: RequestHandler = (req: Request, res: Response) => {
   res.status(200).json({
     status: "healthy",
     service: "rocketchat-webhook",
     timestamp: new Date().toISOString(),
   });
-});
+};
+
+// FIXED: Use properly typed handlers
+app.post("/webhooks/rocketchat", handleRocketChatWebhook);
+app.post("/webhooks/rocketchat/buttons", handleRocketChatButtons);
+app.get("/webhooks/rocketchat/health", handleHealthCheck);
 
 // Validate RocketChat webhook payload
 function validateRocketChatWebhook(payload: any): {
