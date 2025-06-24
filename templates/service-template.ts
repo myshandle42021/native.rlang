@@ -54,14 +54,21 @@ export async function getServiceConfig(
   const serviceName = getServiceNameFromContext(context);
 
   try {
-    // First: Try to get learned configuration from discovery system
-    const { data: learnedConfig } = await db
+    // CRITICAL FIX: Proper database query with await
+    const { data: learnedConfig, error: learnedError } = await db
       .from("learned_service_configs")
       .select("*")
       .eq("service_name", serviceName)
       .eq("active", true)
       .order("updated_at", { ascending: false })
       .limit(1);
+
+    if (learnedError) {
+      console.warn(
+        "Error querying learned configs:",
+        getErrorMessage(learnedError),
+      );
+    }
 
     if (learnedConfig && learnedConfig.length > 0) {
       const config = learnedConfig[0].configuration;
@@ -76,13 +83,20 @@ export async function getServiceConfig(
       };
     }
 
-    // Fallback: Check legacy api_connections table
-    const { data: legacyConfig } = await db
+    // CRITICAL FIX: Proper database query with await
+    const { data: legacyConfig, error: legacyError } = await db
       .from("api_connections")
       .select("*")
       .eq("service", serviceName)
       .eq("client_id", context.clientId || "default")
       .limit(1);
+
+    if (legacyError) {
+      console.warn(
+        "Error querying legacy configs:",
+        getErrorMessage(legacyError),
+      );
+    }
 
     if (legacyConfig && legacyConfig.length > 0) {
       return legacyConfig[0];
@@ -93,7 +107,7 @@ export async function getServiceConfig(
       `No configuration found for ${serviceName}. Discovery needed.`,
     );
   } catch (error) {
-    console.warn("Failed to get service config:", error);
+    console.warn("Failed to get service config:", getErrorMessage(error));
 
     // Return minimal config to prevent total failure
     return {
@@ -132,13 +146,13 @@ export async function getUserCredentials(
       .limit(1);
 
     if (error) {
-      console.error("Error fetching user credentials:", error);
+      console.error("Error fetching user credentials:", getErrorMessage(error));
       return null;
     }
 
     return data && data.length > 0 ? data[0] : null;
   } catch (error) {
-    console.error("Failed to fetch user credentials:", error);
+    console.error("Failed to fetch user credentials:", getErrorMessage(error));
     return null;
   }
 }
@@ -234,7 +248,7 @@ async function handleOAuth(
           }),
       };
     } catch (refreshError) {
-      console.error("Token refresh failed:", refreshError);
+      console.error("Token refresh failed:", getErrorMessage(refreshError));
       throw new Error(
         `${config.service} token expired and refresh failed. Please re-authorize.`,
       );
@@ -307,7 +321,7 @@ export async function makeRequest(
 // 🔧 Enhanced Helper Functions
 
 function getServiceNameFromContext(context: RLangContext): string {
-  return context.memory.current_service || "unknown";
+  return context.memory?.current_service || context.input?.service || "unknown";
 }
 
 function isTokenExpired(credentials: any): boolean {
@@ -356,14 +370,25 @@ async function updateUserCredentials(
   userId: string,
   newCredentials: any,
 ) {
-  await db
-    .from("user_service_credentials")
-    .update({
-      credentials: newCredentials,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("service", service)
-    .eq("user_id", userId);
+  try {
+    const { error } = await db
+      .from("user_service_credentials")
+      .update({
+        credentials: newCredentials,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("service", service)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error(
+        "Failed to update user credentials:",
+        getErrorMessage(error),
+      );
+    }
+  } catch (error) {
+    console.error("Error updating user credentials:", getErrorMessage(error));
+  }
 }
 
 function buildRequiredHeaders(
@@ -374,7 +399,7 @@ function buildRequiredHeaders(
 
   // Handle common required headers dynamically
   requiredHeaders.forEach((headerName) => {
-    if (headerName === "Xero-tenant-id" && context.memory.xero_tenant_id) {
+    if (headerName === "Xero-tenant-id" && context.memory?.xero_tenant_id) {
       headers["Xero-tenant-id"] = context.memory.xero_tenant_id;
     }
     // Add more header handling as needed
@@ -431,33 +456,48 @@ async function handleAPIError(
   throw new Error(`${config.service} API error: ${status} ${errorText}`);
 }
 
+// CRITICAL FIX: Updated service metrics function with proper raw SQL handling
 async function updateServiceMetrics(
   service: string,
   userId: string,
   success: boolean,
 ) {
   try {
-    // Update success/failure metrics for learning
     const timestamp = new Date().toISOString();
 
     if (success) {
-      await db
+      // CRITICAL FIX: Handle raw SQL properly
+      const { error } = await db
         .from("learned_service_configs")
         .update({
           last_success: timestamp,
           usage_count: db.raw("usage_count + 1"),
         })
         .eq("service_name", service);
+
+      if (error) {
+        console.warn(
+          "Failed to update success metrics:",
+          getErrorMessage(error),
+        );
+      }
     } else {
-      await db
+      const { error } = await db
         .from("learned_service_configs")
         .update({
           last_failure: timestamp,
         })
         .eq("service_name", service);
+
+      if (error) {
+        console.warn(
+          "Failed to update failure metrics:",
+          getErrorMessage(error),
+        );
+      }
     }
   } catch (error) {
-    console.warn("Failed to update service metrics:", error);
+    console.warn("Failed to update service metrics:", getErrorMessage(error));
   }
 }
 
@@ -467,7 +507,7 @@ export const serviceTemplate = {
   getUserCredentials,
   authenticate,
   makeRequest,
-  handleOAuth,
+  handleOAuth: handleOAuth,
   refreshOAuthToken,
   updateUserCredentials,
 };

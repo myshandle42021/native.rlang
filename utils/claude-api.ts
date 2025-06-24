@@ -1,5 +1,20 @@
 // Enhanced Claude API integration for API analysis
 // utils/claude-api.ts
+import { RLangContext } from "../schema/types";
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 export async function analyzeAPIDocumentation(
   args: any,
   context: RLangContext,
@@ -69,7 +84,7 @@ export async function analyzeAPIDocumentation(
     console.error("Claude API analysis failed:", error);
     return {
       success: false,
-      error: error.message,
+      error: getErrorMessage(error),
       analysis: null,
       confidence_score: 0,
     };

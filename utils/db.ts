@@ -104,61 +104,64 @@ class PostgreSQLQueryBuilder {
     this.table = table;
   }
 
-  select(fields: string = "*") {
+  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  select(fields: string = "*"): PostgreSQLQueryBuilder {
     this.selectFields = fields;
     return this;
   }
 
-  eq(column: string, value: any) {
+  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  eq(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} = $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  neq(column: string, value: any) {
+  neq(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} != $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  gte(column: string, value: any) {
+  gte(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} >= $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  lte(column: string, value: any) {
+  lte(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} <= $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  gt(column: string, value: any) {
+  gt(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} > $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  lt(column: string, value: any) {
+  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  lt(column: string, value: any): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} < $${this.paramCount}`);
     this.params.push(value);
     return this;
   }
 
-  ilike(column: string, pattern: string) {
+  ilike(column: string, pattern: string): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} ILIKE $${this.paramCount}`);
     this.params.push(pattern);
     return this;
   }
 
-  in(column: string, values: any[]) {
+  in(column: string, values: any[]): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} = ANY($${this.paramCount})`);
     this.params.push(values);
@@ -166,27 +169,30 @@ class PostgreSQLQueryBuilder {
   }
 
   // NEW: contains method for array operations - FIXES .contains() ERRORS
-  contains(column: string, values: any[]) {
+  contains(column: string, values: any[]): PostgreSQLQueryBuilder {
     this.paramCount++;
     this.whereConditions.push(`${column} @> $${this.paramCount}`);
     this.params.push(JSON.stringify(values));
     return this;
   }
 
-  // NEW: on method for upsert operations - FIXES .on() ERRORS
-  on(conflict: string, action?: string) {
+  // CRITICAL FIX: Return PostgreSQLQueryBuilder for chaining
+  on(conflict: string, action?: string): PostgreSQLQueryBuilder {
     this.conflictClause = `ON CONFLICT (${conflict})`;
     this.conflictAction = action || "DO NOTHING";
     return this;
   }
 
-  order(column: string, options: { ascending?: boolean } = {}) {
+  order(
+    column: string,
+    options: { ascending?: boolean } = {},
+  ): PostgreSQLQueryBuilder {
     const direction = options.ascending === false ? "DESC" : "ASC";
     this.orderByClause = `ORDER BY ${column} ${direction}`;
     return this;
   }
 
-  limit(count: number) {
+  limit(count: number): PostgreSQLQueryBuilder {
     this.limitClause = `LIMIT ${count}`;
     return this;
   }

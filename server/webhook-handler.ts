@@ -4,12 +4,26 @@
 import express from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
+import { Request, Response } from "express";
 
 const app = express();
 app.use(express.json());
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 // RocketChat webhook endpoint
-app.post("/webhooks/rocketchat", async (req, res) => {
+app.post("/webhooks/rocketchat", async (req: Request, res: Response) => {
   try {
     console.log("RocketChat webhook received:", req.body);
 
@@ -34,7 +48,7 @@ app.post("/webhooks/rocketchat", async (req, res) => {
         channel: payload.message.channel_id,
         messageId: payload.message.message_id,
         text: payload.message.text,
-        timestamp: payload.message.timestamp,
+        //timestamp: payload.message.timestamp, commented out since line is not in the expected type
         type: payload.message.type || "message",
       },
     );
@@ -68,54 +82,67 @@ app.post("/webhooks/rocketchat", async (req, res) => {
     console.error("Webhook error:", error);
     res.status(500).json({
       status: "error",
-      error: error.message,
+      error: getErrorMessage(error),
     });
   }
 });
 
-// Button response endpoint for interactive messages
-app.post("/webhooks/rocketchat/buttons", async (req, res) => {
-  try {
-    const payload = req.body;
+// CRITICAL FIX: Button response endpoint with proper data mapping
+app.post(
+  "/webhooks/rocketchat/buttons",
+  async (req: Request, res: Response) => {
+    try {
+      const payload = req.body;
 
-    // Extract button action data
-    const buttonData = {
-      user_id: payload.user._id,
-      username: payload.user.username,
-      channel: payload.channel._id,
-      message_id: payload.message._id,
-      button_action: payload.action,
-      button_value: payload.action_value,
-      original_message: payload.message.msg,
-    };
+      // CRITICAL FIX: Extract button action data from payload first
+      const rawButtonData = {
+        user_id: payload.user?._id || payload.user_id,
+        username: payload.user?.username || payload.username,
+        channel: payload.channel?._id || payload.channel_id,
+        message_id: payload.message?._id || payload.message_id,
+        button_action: payload.action || payload.button_action,
+        button_value: payload.action_value || payload.button_value,
+        original_message: payload.message?.msg || payload.original_message,
+      };
 
-    // Create context for button response
-    const context = createRocketChatContext(
-      "rocketchat-intake",
-      "button_response_handler",
-      buttonData,
-    );
+      // CRITICAL FIX: Map to expected interface (was using undefined buttonData)
+      const buttonData = {
+        userId: rawButtonData.user_id,
+        username: rawButtonData.username,
+        channel: rawButtonData.channel,
+        messageId: rawButtonData.message_id,
+        button: rawButtonData.button_action,
+        context: rawButtonData,
+      };
 
-    // Process button response
-    const result = await runRLang({
-      file: "r/agents/rocketchat-intake.r",
-      operation: "button_response_handler",
-      input: buttonData,
-      context: context,
-    });
+      // Create context for button response
+      const context = createRocketChatContext(
+        "rocketchat-intake",
+        "button_response_handler",
+        buttonData,
+      );
 
-    res.status(200).json({
-      status: "button_processed",
-      response: result.result,
-    });
-  } catch (error) {
-    console.error("Button response error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+      // Process button response
+      const result = await runRLang({
+        file: "r/agents/rocketchat-intake.r",
+        operation: "button_response_handler",
+        input: buttonData,
+        context: context,
+      });
+
+      res.status(200).json({
+        status: "button_processed",
+        response: result.result,
+      });
+    } catch (error) {
+      console.error("Button response error:", error);
+      res.status(500).json({ error: getErrorMessage(error) });
+    }
+  },
+);
 
 // Health check endpoint
-app.get("/webhooks/rocketchat/health", (req, res) => {
+app.get("/webhooks/rocketchat/health", (req: Request, res: Response) => {
   res.status(200).json({
     status: "healthy",
     service: "rocketchat-webhook",
@@ -162,7 +189,10 @@ function validateRocketChatWebhook(payload: any): {
 
     return { valid: true, message };
   } catch (error) {
-    return { valid: false, error: `Validation error: ${error.message}` };
+    return {
+      valid: false,
+      error: `Validation error: ${getErrorMessage(error)}`,
+    };
   }
 }
 

@@ -201,8 +201,15 @@ export async function testRCDResolution(
     }
 
     const context: RLangContext = {
-      agentId: "test",
-      clientId: clientId || "system",
+      agentId: args.agentId || "unknown",
+      clientId: args.clientId || "default",
+      operation: args.operation || "default",
+      input: args.input || {},
+      memory: args.memory || {},
+      trace: args.trace || [],
+      timestamp: new Date().toISOString(),
+      user: args.user,
+      channel: args.channel,
     };
 
     const resolvedPath = await rcdFileResolver(fileId, context);

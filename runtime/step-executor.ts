@@ -8,6 +8,19 @@ import { RLangContext, RLangStep, ExecutionResult } from "../schema/types";
 import { writeFile, mkdir } from "fs/promises";
 import { dirname } from "path";
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 // RCD resolver for dynamic capability resolution
 let rcdResolver: Function | null = null;
 
@@ -60,7 +73,7 @@ export async function executeSteps(
     } catch (error) {
       trace.push({
         step: typeof step === "string" ? step : Object.keys(step)[0],
-        error: error instanceof Error ? error.message : String(error),
+        error: error instanceof Error ? getErrorMessage(error) : String(error),
         timestamp: new Date().toISOString(),
         success: false,
       });

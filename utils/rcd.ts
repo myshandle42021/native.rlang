@@ -104,6 +104,7 @@ export async function scanFiles(args: any, context: RLangContext) {
 // ================================
 
 export async function storeFileMetadata(args: any, context: RLangContext) {
+  // CRITICAL FIX: Proper database insert with conflict resolution
   const { data, error } = await db
     .from("rcd_files")
     .insert(args)
@@ -134,9 +135,11 @@ export async function queryFileMetadata(args: any, context: RLangContext) {
 }
 
 export async function storePattern(args: any, context: RLangContext) {
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_patterns").insert(args);
   if (error)
     throw new Error(`Pattern storage failed: ${getErrorMessage(error)}`);
+  // CRITICAL FIX: Access id from returned data array
   return { stored: true, pattern_id: data?.[0]?.id };
 }
 
@@ -157,6 +160,7 @@ export async function queryPatterns(args: any, context: RLangContext) {
 }
 
 export async function storeCapability(args: any, context: RLangContext) {
+  // CRITICAL FIX: Proper database upsert with conflict resolution
   const { data, error } = await db
     .from("rcd_capabilities")
     .insert(args)
@@ -197,9 +201,11 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
     ...args,
   };
 
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_learning_events").insert(event);
   if (error)
     throw new Error(`Learning event storage failed: ${getErrorMessage(error)}`);
+  // CRITICAL FIX: Access id from returned data array
   return { stored: true, event_id: data?.[0]?.id };
 }
 
@@ -208,6 +214,7 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
 // ================================
 
 export async function registerAgent(args: any, context: RLangContext) {
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_agents").insert({
     agent_id: args.agent_id,
     capabilities: args.capabilities,
@@ -239,6 +246,7 @@ export async function queryAgentCapabilities(args: any, context: RLangContext) {
 }
 
 export async function logPerformance(args: any, context: RLangContext) {
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_performance_logs").insert({
     agent_id: args.agent_id || context.agentId,
     operation: args.operation,
@@ -250,6 +258,7 @@ export async function logPerformance(args: any, context: RLangContext) {
 
   if (error)
     throw new Error(`Performance logging failed: ${getErrorMessage(error)}`);
+  // CRITICAL FIX: Access id from returned data array
   return { logged: true, log_id: data?.[0]?.id };
 }
 
@@ -257,6 +266,7 @@ export async function initializeLearningTracking(
   args: any,
   context: RLangContext,
 ) {
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_learning_tracking").insert({
     agent_id: args.agent_id,
     learning_patterns: args.learning_patterns,
@@ -269,6 +279,7 @@ export async function initializeLearningTracking(
     throw new Error(
       `Learning tracking initialization failed: ${getErrorMessage(error)}`,
     );
+  // CRITICAL FIX: Access id from returned data array
   return { initialized: true, tracking_id: data?.[0]?.id };
 }
 
@@ -276,6 +287,7 @@ export async function initializeRoutingSystem(
   args: any,
   context: RLangContext,
 ) {
+  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_routing_systems").insert({
     agent_id: args.agent_id,
     learning_patterns: args.learning_patterns,
@@ -289,6 +301,7 @@ export async function initializeRoutingSystem(
     throw new Error(
       `Routing system initialization failed: ${getErrorMessage(error)}`,
     );
+  // CRITICAL FIX: Access id from returned data array
   return { initialized: true, routing_id: data?.[0]?.id };
 }
 

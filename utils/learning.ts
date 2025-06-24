@@ -5,6 +5,19 @@ import { db } from "./db";
 import { RLangContext } from "../schema/types";
 import crypto from "crypto";
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 // INFRASTRUCTURE ONLY - Data storage and retrieval
 
 export async function storeLearningEvent(args: any, context: RLangContext) {
@@ -23,10 +36,15 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
     learning_cycle: args.learning_cycle || 0,
   };
 
-  const { error } = await db.from("learning_events").insert(learningEvent);
-  if (error) throw new Error(`Learning event storage failed: ${error.message}`);
+  // CRITICAL FIX: Single database insert with proper return value handling
+  const { data, error } = await db
+    .from("learning_events")
+    .insert(learningEvent);
+  if (error)
+    throw new Error(`Learning event storage failed: ${getErrorMessage(error)}`);
 
-  return { stored: true, event_id: learningEvent.id };
+  // CRITICAL FIX: Access id from returned data array
+  return { stored: true, event_id: data?.[0]?.id };
 }
 
 export async function queryLearningEvents(args: any, context: RLangContext) {
@@ -44,7 +62,8 @@ export async function queryLearningEvents(args: any, context: RLangContext) {
   query = query.order("timestamp", { ascending: false });
 
   const { data, error } = await query;
-  if (error) throw new Error(`Learning events query failed: ${error.message}`);
+  if (error)
+    throw new Error(`Learning events query failed: ${getErrorMessage(error)}`);
 
   return data || [];
 }
@@ -62,10 +81,13 @@ export async function storeAgentPattern(args: any, context: RLangContext) {
     created_at: new Date().toISOString(),
   };
 
-  const { error } = await db.from("agent_patterns").insert(pattern);
-  if (error) throw new Error(`Pattern storage failed: ${error.message}`);
+  // CRITICAL FIX: Proper database insert with return value handling
+  const { data, error } = await db.from("agent_patterns").insert(pattern);
+  if (error)
+    throw new Error(`Pattern storage failed: ${getErrorMessage(error)}`);
 
-  return { stored: true, pattern_id: pattern.id };
+  // CRITICAL FIX: Access id from returned data array (line 68 issue)
+  return { stored: true, pattern_id: data?.[0]?.id };
 }
 
 export async function queryAgentPatterns(args: any, context: RLangContext) {
@@ -82,7 +104,7 @@ export async function queryAgentPatterns(args: any, context: RLangContext) {
   query = query.order("confidence_score", { ascending: false });
 
   const { data, error } = await query;
-  if (error) throw new Error(`Pattern query failed: ${error.message}`);
+  if (error) throw new Error(`Pattern query failed: ${getErrorMessage(error)}`);
 
   return data || [];
 }
@@ -102,11 +124,17 @@ export async function storeOptimizationHistory(
     created_at: new Date().toISOString(),
   };
 
-  const { error } = await db.from("optimization_history").insert(optimization);
+  // CRITICAL FIX: Proper database insert with return value handling
+  const { data, error } = await db
+    .from("optimization_history")
+    .insert(optimization);
   if (error)
-    throw new Error(`Optimization history storage failed: ${error.message}`);
+    throw new Error(
+      `Optimization history storage failed: ${getErrorMessage(error)}`,
+    );
 
-  return { stored: true, optimization_id: optimization.id };
+  // CRITICAL FIX: Access id from returned data array (line 109 issue)
+  return { stored: true, optimization_id: data?.[0]?.id };
 }
 
 export async function storeKnowledgeTransfer(args: any, context: RLangContext) {
@@ -120,11 +148,15 @@ export async function storeKnowledgeTransfer(args: any, context: RLangContext) {
     created_at: new Date().toISOString(),
   };
 
-  const { error } = await db.from("knowledge_transfers").insert(transfer);
+  // CRITICAL FIX: Proper database insert with return value handling
+  const { data, error } = await db.from("knowledge_transfers").insert(transfer);
   if (error)
-    throw new Error(`Knowledge transfer storage failed: ${error.message}`);
+    throw new Error(
+      `Knowledge transfer storage failed: ${getErrorMessage(error)}`,
+    );
 
-  return { stored: true, transfer_id: transfer.id };
+  // CRITICAL FIX: Access id from returned data array (line 127 issue)
+  return { stored: true, transfer_id: data?.[0]?.id };
 }
 
 // INFRASTRUCTURE ONLY - Hash generation for input patterns
@@ -165,26 +197,36 @@ export async function aggregatePerformanceByAgent(
   const since =
     args.since || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  const { data, error } = await db.query(
-    `
-    SELECT
-      agent_id,
-      COUNT(*) as total_operations,
-      AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as success_rate,
-      AVG((performance_metrics->>'duration_ms')::numeric) as avg_duration_ms,
-      AVG((performance_metrics->>'memory_mb')::numeric) as avg_memory_mb,
-      COUNT(CASE WHEN NOT success THEN 1 END) as error_count
-    FROM learning_events
-    WHERE timestamp >= $1
-    GROUP BY agent_id
-    ORDER BY success_rate DESC, avg_duration_ms ASC
-  `,
-    [since],
-  );
+  try {
+    const { data, error } = await db.query(
+      `
+      SELECT
+        agent_id,
+        COUNT(*) as total_operations,
+        AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as success_rate,
+        AVG((performance_metrics->>'duration_ms')::numeric) as avg_duration_ms,
+        AVG((performance_metrics->>'memory_mb')::numeric) as avg_memory_mb,
+        COUNT(CASE WHEN NOT success THEN 1 END) as error_count
+      FROM learning_events
+      WHERE timestamp >= $1
+      GROUP BY agent_id
+      ORDER BY success_rate DESC, avg_duration_ms ASC
+    `,
+      [since],
+    );
 
-  if (error)
-    throw new Error(`Performance aggregation failed: ${error.message}`);
-  return data || [];
+    if (error) {
+      throw new Error(
+        `Performance aggregation failed: ${getErrorMessage(error)}`,
+      );
+    }
+    return data || [];
+  } catch (error) {
+    // CRITICAL FIX: Handle the catch block error properly (line 186 issue)
+    throw new Error(
+      `Performance aggregation failed: ${getErrorMessage(error)}`,
+    );
+  }
 }
 
 // INFRASTRUCTURE ONLY - Simple data filtering
@@ -227,7 +269,8 @@ export async function cleanupOldLearningData(args: any, context: RLangContext) {
     .delete()
     .lt("timestamp", cutoffDate);
 
-  if (error) throw new Error(`Learning data cleanup failed: ${error.message}`);
+  if (error)
+    throw new Error(`Learning data cleanup failed: ${getErrorMessage(error)}`);
 
   return {
     cleaned: true,
@@ -244,7 +287,9 @@ export async function validateLearningTables(args: any, context: RLangContext) {
     "optimization_history",
     "knowledge_transfers",
   ];
-  const results = {};
+
+  // CRITICAL FIX: Proper typing for results object (line 261, 263 issues)
+  const results: Record<string, boolean> = {};
 
   for (const table of requiredTables) {
     try {
@@ -258,8 +303,10 @@ export async function validateLearningTables(args: any, context: RLangContext) {
         [table],
       );
 
+      // CRITICAL FIX: Proper index access with typing
       results[table] = !error && data?.[0]?.exists;
     } catch (err) {
+      // CRITICAL FIX: Proper index access with typing
       results[table] = false;
     }
   }
