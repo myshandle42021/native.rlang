@@ -4,11 +4,28 @@
 import { RLangContext } from "../schema/types";
 import { db } from "../utils/db";
 
+function isError(error: unknown): error is Error {
+  return error instanceof Error;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (isError(error)) return error.message;
+  if (typeof error === 'string') return error;
+  return String(error);
+}
+
 interface ServiceConfig {
   service: string;
   auth_type: "oauth" | "api_key" | "bearer" | "basic";
   base_url: string;
   endpoints: Record<string, string>;
+  auth_header?: string;
+    auth_prefix?: string;
+    oauth_config?: {
+      client_id: string;
+      client_secret: string;
+      token_url: string;
+    };
   headers?: {
     required?: string[];
     optional?: string[];
@@ -187,7 +204,7 @@ async function handleOAuth(credentials: any, config: ServiceConfig, context: RLa
       const refreshedTokens = await refreshOAuthToken(credentials, config, context);
 
       // Update stored credentials
-      await updateUserCredentials(config.service, context.user, {
+      await updateUserCredentials(config.service, context.user || "system", {
         ...credentials,
         ...refreshedTokens,
         updated_at: new Date().toISOString()
@@ -252,16 +269,15 @@ export async function makeRequest(
     const responseData = await response.json();
 
     // Update success metrics
-    await updateServiceMetrics(config.service, context.user, true);
+    await updateServiceMetrics(config.service, context.user || "system", true);
 
     return responseData;
 
   } catch (error) {
     // Update failure metrics
-    await updateServiceMetrics(config.service, context.user, false);
+    await updateServiceMetrics(config.service, context.user || "system", false);
 
-    throw new Error(`${config.service} API request failed: ${error.message}`);
-  }
+    throw new Error(`${config.service} API request failed: ${getErrorMessage(error)}`);  }
 }
 
 // 🔧 Enhanced Helper Functions
