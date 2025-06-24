@@ -1,7 +1,7 @@
 // server/webhook-handler.ts
 // Express.js webhook endpoint for RocketChat integration
 
-import express, { Request, Response } from "express";
+import express, { Request, Response, RequestHandler } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
 
@@ -146,10 +146,13 @@ const handleHealthCheck = (req: Request, res: Response) => {
   });
 };
 
-// FIXED: Use properly typed handlers
-app.post("/webhooks/rocketchat", handleRocketChatWebhook);
-app.post("/webhooks/rocketchat/buttons", handleRocketChatButtons);
-app.get("/webhooks/rocketchat/health", handleHealthCheck);
+// ✅ FIXED: Cast each handler to RequestHandler to resolve TS2769
+app.post("/webhooks/rocketchat", handleRocketChatWebhook as RequestHandler);
+app.post(
+  "/webhooks/rocketchat/buttons",
+  handleRocketChatButtons as RequestHandler,
+);
+app.get("/webhooks/rocketchat/health", handleHealthCheck as RequestHandler);
 
 // Validate RocketChat webhook payload
 function validateRocketChatWebhook(payload: any): {
