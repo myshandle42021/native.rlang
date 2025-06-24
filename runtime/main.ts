@@ -33,10 +33,11 @@ async function startROL3() {
     // Initialize RCD system
     console.log("🧠 Initializing RCD system...");
     const result = await runRLang({
-      file: "r/system/system-doctor.r",
+      file: "r/agents/system-doctor.r",
       operation: "system_health_check",
       input: { startup: true },
     });
+    console.log("🧪 runRLang result:", result);
     console.log("✅ RCD system initialized:", result.success);
 
     console.log("🎉 ROL3 system is ALIVE and ready!");
