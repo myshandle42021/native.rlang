@@ -222,7 +222,7 @@ async function handleOAuth(
       // Update stored credentials
       await updateUserCredentials(config.service, context.user || "system", {
         ...credentials,
-        ...refreshedTokens,
+        ...(refreshedTokens as any),
         updated_at: new Date().toISOString(),
       });
 
@@ -334,7 +334,7 @@ async function refreshOAuthToken(
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${btoa(`${config.oauth_config.client_id}:${config.oauth_config.client_secret}`)}`,
+      Authorization: `Basic ${btoa(`${config.oauth_config!.client_id}:${config.oauth_config!.client_secret}`)}`,
     },
     body: new URLSearchParams({
       grant_type: "refresh_token",
@@ -348,7 +348,7 @@ async function refreshOAuthToken(
     );
   }
 
-  return await response.json();
+  return (await response.json()) as any;
 }
 
 async function updateUserCredentials(
