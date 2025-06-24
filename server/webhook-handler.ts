@@ -21,8 +21,8 @@ function getErrorMessage(error: unknown): string {
   return String(error);
 }
 
-// RocketChat webhook endpoint
-app.post("/webhooks/rocketchat", async (req, res) => {
+// FIXED: Express 5.x compatible route handlers
+app.post("/webhooks/rocketchat", async function (req, res) {
   try {
     console.log("RocketChat webhook received:", req.body);
 
@@ -86,8 +86,8 @@ app.post("/webhooks/rocketchat", async (req, res) => {
   }
 });
 
-// Button response endpoint
-app.post("/webhooks/rocketchat/buttons", async (req, res) => {
+// FIXED: Express 5.x compatible route handlers
+app.post("/webhooks/rocketchat/buttons", async function (req, res) {
   try {
     const payload = req.body;
 
@@ -137,8 +137,8 @@ app.post("/webhooks/rocketchat/buttons", async (req, res) => {
   }
 });
 
-// Health check endpoint
-app.get("/webhooks/rocketchat/health", (req, res) => {
+// FIXED: Express 5.x compatible route handlers
+app.get("/webhooks/rocketchat/health", function (req, res) {
   res.status(200).json({
     status: "healthy",
     service: "rocketchat-webhook",
