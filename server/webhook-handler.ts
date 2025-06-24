@@ -1,7 +1,7 @@
 // server/webhook-handler.ts
 // Express.js webhook endpoint for RocketChat integration
 
-import express, { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { runRLang } from "../runtime/interpreter";
 import { createRocketChatContext } from "../runtime/context";
 
