@@ -54,14 +54,16 @@ export async function getServiceConfig(
   const serviceName = getServiceNameFromContext(context);
 
   try {
-    // CRITICAL FIX: Use serviceName instead of undefined 'service' variable
-    const { data: learnedConfig, error: learnedError } = await db
+    // CRITICAL FIX: Build query first, then await it
+    const learnedConfigQuery = db
       .from("learned_service_configs")
       .select("*")
-      .eq("service_name", serviceName) // Fixed: was 'service'
+      .eq("service_name", serviceName)
       .eq("active", true)
       .order("updated_at", { ascending: false })
       .limit(1);
+    const { data: learnedConfig, error: learnedError } =
+      await learnedConfigQuery;
 
     if (learnedError) {
       console.warn(
@@ -83,13 +85,14 @@ export async function getServiceConfig(
       };
     }
 
-    // CRITICAL FIX: Use serviceName and fix column name
-    const { data: legacyConfig, error: legacyError } = await db
+    // CRITICAL FIX: Build query first, then await it
+    const legacyConfigQuery = db
       .from("api_connections")
       .select("*")
-      .eq("service", serviceName) // Fixed: was 'service_name' - check your db schema
+      .eq("service", serviceName)
       .eq("client_id", context.clientId || "default")
       .limit(1);
+    const { data: legacyConfig, error: legacyError } = await legacyConfigQuery;
 
     if (legacyError) {
       console.warn(
@@ -137,13 +140,14 @@ export async function getUserCredentials(
   }
 
   try {
-    const { data, error } = await db
+    const credentialsQuery = db
       .from("user_service_credentials")
       .select("*")
       .eq("service", serviceName)
       .eq("user_id", userId)
       .eq("active", true)
       .limit(1);
+    const { data, error } = await credentialsQuery;
 
     if (error) {
       console.error("Error fetching user credentials:", getErrorMessage(error));
@@ -371,15 +375,15 @@ async function updateUserCredentials(
   newCredentials: any,
 ) {
   try {
-    const { error } = await db
+    const updateQuery = db
       .from("user_service_credentials")
       .update({
         credentials: newCredentials,
         updated_at: new Date().toISOString(),
       })
-      .select("*")
       .eq("service", service)
       .eq("user_id", userId);
+    const { error } = await updateQuery;
 
     if (error) {
       console.error(
@@ -457,7 +461,7 @@ async function handleAPIError(
   throw new Error(`${config.service} API error: ${status} ${errorText}`);
 }
 
-// CRITICAL FIX: Updated service metrics function with proper raw SQL handling
+// CRITICAL FIX: Updated service metrics function with proper query building
 async function updateServiceMetrics(
   service: string,
   userId: string,
@@ -467,16 +471,15 @@ async function updateServiceMetrics(
     const timestamp = new Date().toISOString();
 
     if (success) {
-      // CRITICAL FIX: Handle raw SQL properly by using string instead of db.raw()
-      const { error } = await db
+      // CRITICAL FIX: Build query first, then await it
+      const successQuery = db
         .from("learned_service_configs")
         .update({
           last_success: timestamp,
-          // Use string literal instead of db.raw() for PostgreSQL
           usage_count: db.raw("usage_count + 1"),
         })
-        .select("*")
         .eq("service_name", service);
+      const { error } = await successQuery;
 
       if (error) {
         console.warn(
@@ -485,13 +488,14 @@ async function updateServiceMetrics(
         );
       }
     } else {
-      const { error } = await db
+      // CRITICAL FIX: Build query first, then await it
+      const failureQuery = db
         .from("learned_service_configs")
         .update({
           last_failure: timestamp,
         })
-        .select("*")
         .eq("service_name", service);
+      const { error } = await failureQuery;
 
       if (error) {
         console.warn(
