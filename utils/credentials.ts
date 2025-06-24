@@ -1,4 +1,36 @@
 // utils/credentials.ts Dynamic credential management - NO hardcoded .env for user services
+import { RLangContext } from "../schema/types";
+import { rocketchat } from "./rocketchat";
+
+// Add ServiceConfig interface (since it's referenced but not imported)
+interface ServiceConfig {
+  service: string;
+  auth_type: "oauth" | "api_key" | "bearer" | "basic";
+  base_url: string;
+  endpoints: Record<string, string>;
+  credentials?: any;
+}
+
+// Add the missing functions that are referenced:
+function isTokenExpired(credentials: any): boolean {
+  if (!credentials.expires_at) return false;
+  const expiryTime = new Date(credentials.expires_at).getTime();
+  const currentTime = Date.now();
+  const bufferTime = 5 * 60 * 1000;
+  return currentTime >= expiryTime - bufferTime;
+}
+
+async function refreshUserToken(credentials: any, userId: string) {
+  throw new Error("Token refresh not implemented - please re-authenticate");
+}
+
+// Add infer object
+const infer = {
+  analyzeAPICredentials: async (args: any) => {
+    const { analyzeAPIDocumentation } = await import("./claude-api");
+    return { required_fields: [] };
+  },
+};
 
 // When auto-generating utils/xero.ts, credentials come from database
 async function getServiceConfig(context: RLangContext): Promise<ServiceConfig> {
