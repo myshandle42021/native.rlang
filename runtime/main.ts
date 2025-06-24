@@ -33,30 +33,33 @@ async function startROL3() {
         input: {},
       });
 
+      console.log("🔍 RCD Bootstrap Result:", rcdBootstrap);
+
       if (rcdBootstrap.success) {
         console.log("✅ RCD bootstrap complete:", rcdBootstrap.result);
       } else {
         console.error("💥 RCD bootstrap failed:", rcdBootstrap.error);
-        process.exit(1);
-      }
-    } catch (rcdError) {
-      console.error("💥 RCD bootstrap check failed:", rcdError);
-      console.log("🔄 Attempting fallback initialization...");
+        console.log("🔄 Attempting fallback initialization...");
 
-      // Fallback: Try to initialize RCD core directly
-      try {
-        await runRLang({
+        // Fallback: Try to initialize RCD core directly
+        const fallbackResult = await runRLang({
           file: "r/system/rcd-core.r",
           operation: "schema_init",
           input: {},
         });
-        console.log("✅ RCD fallback initialization succeeded");
-      } catch (fallbackError) {
-        console.error(
-          "💥 RCD fallback failed, continuing without RCD:",
-          fallbackError,
-        );
+
+        console.log("🔍 Fallback Result:", fallbackResult);
+
+        if (fallbackResult.success) {
+          console.log("✅ RCD fallback initialization succeeded");
+        } else {
+          console.error("💥 RCD fallback failed:", fallbackResult.error);
+          console.log("🤷 Continuing without RCD metadata...");
+        }
       }
+    } catch (rcdError) {
+      console.error("💥 RCD bootstrap check threw exception:", rcdError);
+      console.log("🤷 Continuing without RCD...");
     }
 
     // Start webhook server
