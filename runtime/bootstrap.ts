@@ -1,4 +1,4 @@
-// utils/bootstrap.ts
+// runtime/bootstrap.ts
 // PURE infrastructure (10% rule) - ZERO logic, only OS/filesystem primitives
 
 import { RLangContext } from "../schema/types";
@@ -22,7 +22,7 @@ export async function registerSignalHandler(args: any, context: RLangContext) {
  * Raw database connection - NO health checks or logic
  */
 export async function connectDatabase(args: any, context: RLangContext) {
-  const { db } = await import("./db");
+  const { db } = await import("../utils/db");
   return await db.health(); // Raw result, no interpretation
 }
 

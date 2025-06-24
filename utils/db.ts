@@ -44,6 +44,33 @@ export const db = {
     }
   },
 
+  // RPC method for stored procedures - FIXES .rpc() ERRORS
+  rpc: async (functionName: string, params: any = {}) => {
+    const client = await pool.connect();
+    try {
+      const paramKeys = Object.keys(params);
+      const paramValues = paramKeys.map((key) => params[key]);
+      const paramPlaceholders = paramValues.map((_, i) => `$${i + 1}`);
+
+      const sql = `SELECT * FROM ${functionName}(${paramPlaceholders.join(", ")})`;
+
+      const result = await client.query(sql, paramValues);
+      return { data: result.rows, error: null };
+    } catch (error) {
+      return { data: null, error };
+    } finally {
+      client.release();
+    }
+  },
+
+  // Raw method for raw SQL expressions - FIXES .raw() ERRORS
+  raw: (expression: string) => {
+    return {
+      isRaw: true,
+      expression: expression,
+    };
+  },
+
   // Health check
   health: async () => {
     try {
@@ -67,6 +94,11 @@ class PostgreSQLQueryBuilder {
   private limitClause: string = "";
   private params: any[] = [];
   private paramCount: number = 0;
+
+  // NEW: Add missing properties for conflict resolution
+  private conflictClause: string = "";
+  private conflictAction: string = "";
+  private updateFields: Record<string, any> = {};
 
   constructor(table: string) {
     this.table = table;
@@ -133,6 +165,21 @@ class PostgreSQLQueryBuilder {
     return this;
   }
 
+  // NEW: contains method for array operations - FIXES .contains() ERRORS
+  contains(column: string, values: any[]) {
+    this.paramCount++;
+    this.whereConditions.push(`${column} @> $${this.paramCount}`);
+    this.params.push(JSON.stringify(values));
+    return this;
+  }
+
+  // NEW: on method for upsert operations - FIXES .on() ERRORS
+  on(conflict: string, action?: string) {
+    this.conflictClause = `ON CONFLICT (${conflict})`;
+    this.conflictAction = action || "DO NOTHING";
+    return this;
+  }
+
   order(column: string, options: { ascending?: boolean } = {}) {
     const direction = options.ascending === false ? "DESC" : "ASC";
     this.orderByClause = `ORDER BY ${column} ${direction}`;
@@ -181,7 +228,7 @@ class PostgreSQLQueryBuilder {
     return this.execute().catch(onReject);
   }
 
-  // INSERT operation
+  // ENHANCED: INSERT operation with conflict resolution
   async insert(data: any | any[]): Promise<{ data: any[] | null; error: any }> {
     try {
       const isArray = Array.isArray(data);
@@ -209,11 +256,34 @@ class PostgreSQLQueryBuilder {
         valueRows.push(`(${rowParams.join(", ")})`);
       }
 
-      const sql = `
+      let sql = `
         INSERT INTO ${this.table} (${columnList})
         VALUES ${valueRows.join(", ")}
-        RETURNING *
       `;
+
+      // NEW: Add conflict resolution if specified
+      if (this.conflictClause) {
+        sql += ` ${this.conflictClause}`;
+
+        if (this.conflictAction === "DO NOTHING") {
+          sql += " DO NOTHING";
+        } else if (Object.keys(this.updateFields).length > 0) {
+          // Handle DO UPDATE SET
+          const updateList = Object.keys(this.updateFields).map((key) => {
+            if (
+              this.updateFields[key] &&
+              typeof this.updateFields[key] === "object" &&
+              this.updateFields[key].isRaw
+            ) {
+              return `${key} = ${this.updateFields[key].expression}`;
+            }
+            return `${key} = EXCLUDED.${key}`;
+          });
+          sql += ` DO UPDATE SET ${updateList.join(", ")}`;
+        }
+      }
+
+      sql += " RETURNING *";
 
       const client = await pool.connect();
       try {
@@ -227,19 +297,37 @@ class PostgreSQLQueryBuilder {
     }
   }
 
-  // UPDATE operation
+  // ENHANCED: UPDATE operation - now supports chaining with .on()
   async update(data: any): Promise<{ data: any[] | null; error: any }> {
     try {
+      // Store update fields for potential use in conflict resolution
+      this.updateFields = { ...data };
+
       if (this.whereConditions.length === 0) {
         throw new Error("UPDATE requires WHERE conditions for safety");
       }
 
       const columns = Object.keys(data);
       const setClause = columns
-        .map((col, index) => `${col} = $${this.params.length + index + 1}`)
+        .map((col, index) => {
+          // Handle raw SQL expressions
+          if (data[col] && typeof data[col] === "object" && data[col].isRaw) {
+            return `${col} = ${data[col].expression}`;
+          }
+          return `${col} = $${this.params.length + index + 1}`;
+        })
         .join(", ");
 
-      const updateParams = [...this.params, ...columns.map((col) => data[col])];
+      // Only add non-raw values to params
+      const updateParams = [
+        ...this.params,
+        ...columns
+          .filter(
+            (col) =>
+              !(data[col] && typeof data[col] === "object" && data[col].isRaw),
+          )
+          .map((col) => data[col]),
+      ];
 
       const whereClause = `WHERE ${this.whereConditions.join(" AND ")}`;
 
