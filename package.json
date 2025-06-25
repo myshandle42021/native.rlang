@@ -2,12 +2,12 @@
   "name": "rol3",
   "version": "1.0.0",
   "description": "ROL3 - Native RLang Agent Ecosystem with Self-Healing and Evolution",
-  "main": "dist/runtime/bootstrap.js",
+  "main": "dist/runtime/main.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx runtime/bootstrap.ts",
-    "start": "node dist/runtime/bootstrap.js",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' tsx runtime/main.ts",
+    "start": "node dist/runtime/main.js",
     "bootstrap": "npm run build && npm run start",
     "test": "tsx cli/run.ts",
     "clean": "rm -rf dist/ && rm -rf r/agents/*.r && rm -rf r/clients/",
@@ -18,13 +18,15 @@
   "dependencies": {
     "@fastify/cors": "^8.4.0",
     "dotenv": "^16.3.1",
+    "express": "^5.1.0",
     "fastify": "^4.24.3",
     "js-yaml": "^4.1.0",
     "pg": "^8.11.3",
     "yaml": "^2.3.4"
   },
   "devDependencies": {
-    "@types/node": "^20.8.9",
+    "@types/express": "^5.0.3",
+    "@types/node": "^20.19.1",
     "@types/pg": "^8.10.7",
     "tsx": "^4.1.4",
     "typescript": "^5.2.2"

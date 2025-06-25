@@ -11,6 +11,8 @@ export interface RLangContext {
   timestamp: string;
   user?: string;
   channel?: string;
+  metadata?: Record<string, any>;
+  context?: any;
 }
 
 export interface TraceEntry {

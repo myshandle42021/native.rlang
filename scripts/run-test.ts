@@ -18,7 +18,7 @@ async function main() {
       trace: [],
     };
 
-    const result = await runRLang(code, "run_test", {}, context);
+    const result = await runRLang({ file: code, operation: "run_test", input: {}, context });
     console.log("✅ Test Result:", result);
   } catch (err: any) {
     console.error("❌ Test Error:", {
