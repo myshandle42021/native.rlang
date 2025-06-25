@@ -166,21 +166,44 @@ function validateRocketChatWebhook(payload: any): {
       return { valid: false, error: "Invalid payload structure" };
     }
 
-    // RocketChat webhook formats can vary, handle common patterns
-    let message;
+    // CRITICAL FIX: Handle YOUR direct payload format first
+    if (payload.text && payload.user_id && payload.channel_id) {
+      const message = {
+        message_id: payload.message_id,
+        text: payload.text,
+        user_id: payload.user_id,
+        username: payload.user_name,
+        user_name: payload.user_name,
+        channel_id: payload.channel_id,
+        channel_name: payload.channel_name,
+        timestamp: payload.timestamp || new Date().toISOString(),
+        type: "message",
+        thread_id: payload.thread_id,
+        edited: payload.edited,
+        mentions: payload.mentions || [],
+        channels: payload.channels || [],
+        attachments: payload.attachments || [],
+        reactions: payload.reactions || {},
+        starred: payload.starred || false,
+        pinned: payload.pinned || false,
+        bot: payload.bot || false,
+        user_type: "user",
+      };
 
+      return { valid: true, message };
+    }
+
+    // Existing logic for other webhook formats (keep as fallback)
+    let message;
     if (
       payload.messages &&
       Array.isArray(payload.messages) &&
       payload.messages.length > 0
     ) {
-      // Batch message format
       message = extractMessageData(payload.messages[0]);
     } else if (payload.message) {
-      // Single message format
       message = extractMessageData(payload.message);
     } else if (payload.msg) {
-      // Direct message format
       message = extractMessageData(payload);
     } else {
       return { valid: false, error: "No message data found in payload" };
