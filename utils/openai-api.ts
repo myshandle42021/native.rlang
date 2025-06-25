@@ -1,17 +1,27 @@
-// utils/openai-api.ts - OpenAI client for fast intent detection
+// utils/openai-api.ts - Lazy initialization
 import { RLangContext } from "../schema/types";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY environment variable not set");
+    }
+
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 export async function completeWithOpenAI(args: any, context: RLangContext) {
   const { system_prompt, template, user_input, output_format } = args;
 
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY environment variable not set");
-  }
+  // Get client when needed (after dotenv has loaded)
+  const client = getOpenAIClient();
 
   const fullPrompt = `
 ${system_prompt}
@@ -25,8 +35,8 @@ Please fill in the template above based on the user's request. Output as ${outpu
 `;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Fast and cost-effective for intent detection
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: fullPrompt }],
       temperature: 0.1,
       max_tokens: 1000,
@@ -42,7 +52,6 @@ Please fill in the template above based on the user's request. Output as ${outpu
   } catch (error) {
     console.error("OpenAI API error:", error);
 
-    // Graceful fallback for development
     if (error instanceof Error && error.message.includes("API key")) {
       console.warn("⚠️ OpenAI API key issue - returning fallback response");
       return `
