@@ -1,6 +1,8 @@
 // runtime/main.ts - Actual startup script for ROL3
 import { runRLang } from "./interpreter";
 import { connectDatabase } from "./bootstrap";
+import { registerFunction } from "../utils/runtime";
+import { complete } from "../utils/llm";
 
 process.on("unhandledRejection", (reason) => {
   console.error("🚨 Unhandled Rejection:", reason);
@@ -23,6 +25,15 @@ async function startROL3() {
       operation: "startup",
     } as any);
     console.log("✅ Database connected:", dbHealth);
+
+    console.log("🧠 Registering LLM function...");
+    try {
+      await registerFunction("llm", "complete", complete);
+      console.log("✅ LLM function registered");
+    } catch (error) {
+      console.error("⚠️ LLM registration failed:", error);
+      console.log("🤷 Continuing without LLM enhancement...");
+    }
 
     // CRITICAL FIX: RCD Bootstrap Check (prevents silent failures)
     console.log("🔗 Checking RCD metadata bootstrap...");
