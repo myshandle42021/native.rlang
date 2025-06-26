@@ -106,11 +106,14 @@ operations:
         cases:
           # Agent creation flow - The main demo path
           - create_agent:
-              - run: ["rocketchat-intake.r", "handle_agent_creation", {
+          - run:
+              - "rocketchat-intake.r"
+              - "handle_agent_creation"
+              - {
                   intent: "${validated_intent}",
                   user_context: "${enriched_context}",
                   message: "${message_context}"
-                }]
+                }
 
           # System status and monitoring
           - system_status:
