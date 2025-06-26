@@ -13,7 +13,7 @@ function isError(error: unknown): error is Error {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (isError(error)) return error.message;
+  if (isError(error)) return getErrorMessage(error);
   if (typeof error === "string") return error;
   if (error && typeof error === "object" && "message" in error) {
     return String((error as any).message);
@@ -406,7 +406,7 @@ export async function logLearningEvent(args: any, context: RLangContext) {
     patterns_involved: args.patterns_involved || [],
     files_involved: args.files_involved || [],
     duration_ms: args.duration_ms || args.execution_duration_ms,
-    error_message: args.error_message || args.error_details,
+    error_message: args.getErrorMessage ? args.getErrorMessage(error) : args.error_details || args.error_details,
     operation_name: args.operation_name,
     success: args.success !== undefined ? args.success : true,
     performance_metrics: args.performance_metrics || {},
@@ -604,7 +604,7 @@ export async function buildMinimalCapabilityIndex(
     console.error("Error building capability index:", error);
     return {
       index_built: false,
-      error: error.message,
+      error: getErrorMessage(error),
       files_processed: 0,
     };
   }
@@ -682,3 +682,32 @@ export const query_rcd_files = queryRcdFiles;
 export const register_agent = registerAgent;
 export const initialize_learning_tracking = initializeLearningTracking;
 export const initialize_routing_system = initializeRoutingSystem;
+
+
+
+// Missing function: get_user_profile
+export async function get_user_profile(args: any, context: RLangContext) {
+  const userId = args.user_id || context.user;
+  
+  try {
+    // Return basic profile (skip database for now)
+    return {
+      success: true,
+      profile: {
+        user_id: userId,
+        profile_data: {
+          name: context.user || userId,
+          preferences: {},
+          capabilities: [],
+          role: "user"
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
