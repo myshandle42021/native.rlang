@@ -288,10 +288,16 @@ export async function logPerformance(args: any, context: RLangContext) {
   const { data, error } = await db.from("rcd_performance_logs").insert({
     agent_id: args.agent_id || context.agentId,
     operation: args.operation,
-    metrics: args.metrics,
+    metrics:
+      typeof args.metrics === "string"
+        ? JSON.parse(args.metrics)
+        : args.metrics || {},
     success: args.success,
     timestamp: new Date(),
-    context_data: args.context || {},
+    context_data:
+      typeof args.context === "string"
+        ? JSON.parse(args.context)
+        : args.context || {},
   });
 
   if (error)
