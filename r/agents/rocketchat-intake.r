@@ -79,19 +79,22 @@ operations:
       }
 
     # Enhanced natural language intent extraction using intent-detector
-    - run: ["r/system/intent-detector.r", "analyze_user_request", {
-         text: "${message_context.text}",
-         context: {
-           conversation_type: "agent_creation_and_system_interaction",
-           user_profile: "${enriched_context.user_profile}",
-           system_context: "ROL3_autonomous_agent_system",
-           available_capabilities: [
-             "agent_creation", "system_monitoring", "api_integration",
-             "data_processing", "workflow_automation", "learning_feedback"
-           ],
-           user_id: "${message_context.user_id}"
-         }
-       }]
+    - run:
+        - "r/system/intent-detector.r"
+        - "analyze_user_request"
+        - {
+            text: "${message_context.text}",
+            context: {
+              conversation_type: "agent_creation_and_system_interaction",
+              user_profile: "${enriched_context.user_profile}",
+              system_context: "ROL3_autonomous_agent_system",
+              available_capabilities: [
+                "agent_creation", "system_monitoring", "api_integration",
+                "data_processing", "workflow_automation", "learning_feedback"
+              ],
+              user_id: "${message_context.user_id}"
+            }
+          }
 
     # Validate and enhance intent classification
     - rcd_validate_intent_classification: {
@@ -106,51 +109,66 @@ operations:
         cases:
           # Agent creation flow - The main demo path
           - create_agent:
-          - run:
-              - "rocketchat-intake.r"
-              - "handle_agent_creation"
-              - {
-                  intent: "${validated_intent}",
-                  user_context: "${enriched_context}",
-                  message: "${message_context}"
-                }
+              - run:
+                  - "rocketchat-intake.r"
+                  - "handle_agent_creation"
+                  - {
+                      intent: "${validated_intent}",
+                      user_context: "${enriched_context}",
+                      message: "${message_context}"
+                    }
 
           # System status and monitoring
           - system_status:
-              - run: ["rocketchat-intake.r", "handle_system_query", {
-                  query_type: "${validated_intent.query_type}",
-                  user_context: "${enriched_context}"
-                }]
+              - run:
+                  - "rocketchat-intake.r"
+                  - "handle_system_query"
+                  - {
+                      query_type: "${validated_intent.query_type}",
+                      user_context: "${enriched_context}"
+                    }
 
           # User feedback and corrections - Critical for learning
           - feedback_correction:
-              - run: ["rocketchat-intake.r", "process_user_feedback", {
-                  feedback: "${validated_intent.correction}",
-                  context: "${enriched_context}",
-                  correction_type: "${validated_intent.feedback_type}"
-                }]
+              - run:
+                  - "rocketchat-intake.r"
+                  - "process_user_feedback"
+                  - {
+                      feedback: "${validated_intent.correction}",
+                      context: "${enriched_context}",
+                      correction_type: "${validated_intent.feedback_type}"
+                    }
 
           # Agent management (start, stop, modify)
           - agent_management:
-              - run: ["rocketchat-intake.r", "handle_agent_management", {
-                  action: "${validated_intent.management_action}",
-                  agent_id: "${validated_intent.target_agent}",
-                  parameters: "${validated_intent.parameters}"
-                }]
+              - run:
+                  - "rocketchat-intake.r"
+                  - "handle_agent_management"
+                  - {
+                      action: "${validated_intent.management_action}",
+                      agent_id: "${validated_intent.target_agent}",
+                      parameters: "${validated_intent.parameters}"
+                    }
 
           # General conversation and help
           - general_conversation:
-              - run: ["rocketchat-intake.r", "handle_general_conversation", {
-                  intent: "${validated_intent}",
-                  context: "${enriched_context}"
-                }]
+              - run:
+                  - "rocketchat-intake.r"
+                  - "handle_general_conversation"
+                  - {
+                      intent: "${validated_intent}",
+                      context: "${enriched_context}"
+                    }
 
           # Clarification needed
           - clarification_needed:
-              - run: ["rocketchat-intake.r", "request_clarification", {
-                  ambiguity: "${validated_intent.ambiguity}",
-                  suggestions: "${validated_intent.suggestions}"
-                }]
+              - run:
+                  - "rocketchat-intake.r"
+                  - "request_clarification"
+                  - {
+                      ambiguity: "${validated_intent.ambiguity}",
+                      suggestions: "${validated_intent.suggestions}"
+                    }
 
     # Log conversation for learning and improvement
     - rcd_log_conversation_interaction: {
@@ -187,17 +205,20 @@ operations:
       }
 
     # Call the enhanced agent factory
-    - run: ["r/system/agent-factory.r", "create_intelligent_agent", {
-        request: "${input.intent.detailed_description}",
-        context: {
-          user_id: "${input.user_context.user_id}",
-          channel: "${input.user_context.channel}",
-          client_id: "${input.user_context.client_id}",
-          real_time_updates: true,
-          update_channel: "${input.user_context.channel}"
-        },
-        enhancement_level: "${input.intent.complexity || 'standard'}"
-      }]
+    - run:
+        - "r/system/agent-factory.r"
+        - "create_intelligent_agent"
+        - {
+            request: "${input.intent.detailed_description}",
+            context: {
+              user_id: "${input.user_context.user_id}",
+              channel: "${input.user_context.channel}",
+              client_id: "${input.user_context.client_id}",
+              real_time_updates: true,
+              update_channel: "${input.user_context.channel}"
+            },
+            enhancement_level: "${input.intent.complexity || 'standard'}"
+          }
 
     # Handle agent creation result
     - condition:
@@ -218,11 +239,14 @@ operations:
           - condition:
               if: "${service_integrations.length > 0}"
               then:
-                - run: ["rocketchat-intake.r", "handle_service_integration", {
-                    agent_id: "${agent_creation_result.agent_id}",
-                    required_services: "${service_integrations}",
-                    user_context: "${input.user_context}"
-                  }]
+                - run:
+                    - "rocketchat-intake.r"
+                    - "handle_service_integration"
+                    - {
+                        agent_id: "${agent_creation_result.agent_id}",
+                        required_services: "${service_integrations}",
+                        user_context: "${input.user_context}"
+                      }
               else:
                 # Agent is ready to use immediately
                 - rocketchat.sendMessage: {
@@ -329,10 +353,13 @@ operations:
                           }]
                         }
                       # Demonstrate with live data
-                      - run: ["${input.agent_id}.r", "test_integration", {
-                          service: "${item.service_name}",
-                          demo_mode: true
-                        }]
+                      - run:
+                          - "${input.agent_id}.r"
+                          - "test_integration"
+                          - {
+                              service: "${item.service_name}",
+                              demo_mode: true
+                            }
                       - display_live_data_sample: {
                           agent_id: "${input.agent_id}",
                           service: "${item.service_name}",
@@ -386,12 +413,15 @@ operations:
                   user_id: "${input.context.user_id}"
                 }
               # Trigger learning engine update
-              - run: ["r/system/learning-engine.r", "process_user_correction", {
-                  agent_id: "${responsible_agent}",
-                  original_context: "${input.context.original_context}",
-                  user_correction: "${input.feedback}",
-                  learning_priority: "high"
-                }]
+              - run:
+                  - "r/system/learning-engine.r"
+                  - "process_user_correction"
+                  - {
+                      agent_id: "${responsible_agent}",
+                      original_context: "${input.context.original_context}",
+                      user_correction: "${input.feedback}",
+                      learning_priority: "high"
+                    }
               # Confirm learning
               - rocketchat.sendMessage: {
                   channel: "${input.context.channel}",
@@ -414,11 +444,14 @@ operations:
                   context: "${input.context}"
                 }
               # Reinforce successful patterns
-              - run: ["r/system/learning-engine.r", "reinforce_success_pattern", {
-                  agent_id: "${responsible_agent}",
-                  successful_interaction: "${input.context}",
-                  user_satisfaction: "high"
-                }]
+              - run:
+                  - "r/system/learning-engine.r"
+                  - "reinforce_success_pattern"
+                  - {
+                      agent_id: "${responsible_agent}",
+                      successful_interaction: "${input.context}",
+                      user_satisfaction: "high"
+                    }
 
           # User requesting clarification
           - clarification_request:
@@ -562,11 +595,14 @@ operations:
         switch: "${button_context.action}"
         cases:
           - test_agent:
-              - run: ["${button_context.agent_id}.r", "request_handler", {
-                  type: "demo_test",
-                  user_id: "${input.user_id}",
-                  channel: "${input.channel}"
-                }]
+              - run:
+                  - "${button_context.agent_id}.r"
+                  - "request_handler"
+                  - {
+                      type: "demo_test",
+                      user_id: "${input.user_id}",
+                      channel: "${input.channel}"
+                    }
           - enter_credentials:
               - initiate_credential_collection: {
                   service: "${button_context.service}",
@@ -721,7 +757,10 @@ webhook_message_handler:
   - condition:
       if: "${extracted_message.valid}"
       then:
-        - run: ["rocketchat-intake.r", "message_handler", "${extracted_message}"]
+        - run:
+            - "rocketchat-intake.r"
+            - "message_handler"
+            - "${extracted_message}"
       else:
         - tamr.log: { event: "invalid_webhook_payload", payload: "${input}" }
 
@@ -730,11 +769,14 @@ concern:
   priority: 2
   action:
     - tamr.log: { event: "chat_interface_performance_concern", metrics: "${performance_metrics}" }
-    - run: ["r/system/learning-engine.r", "analyze_chat_performance", {
-        agent_id: "${self.id}",
-        focus_areas: ["intent_classification", "user_satisfaction"],
-        improvement_priority: "high"
-      }]
+    - run:
+        - "r/system/learning-engine.r"
+        - "analyze_chat_performance"
+        - {
+            agent_id: "${self.id}",
+            focus_areas: ["intent_classification", "user_satisfaction"],
+            improvement_priority: "high"
+          }
     - condition:
         if: "${performance_concern_critical}"
         then:
