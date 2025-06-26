@@ -289,43 +289,11 @@ async function executeStep(step: RLangStep, context: RLangContext, rData: any) {
       return executeSelfModifyStep(stepValue, context);
     case "self.reflect":
       return executeSelfReflectStep(stepValue, context);
-
-    // Handle internal R-lang operations
-    case "setup_service_configuration":
-    case "initialize_conversation_memory":
-    case "start_webhook_listener":
-    case "rcd_register_chat_agent":
-    case "rcd_initialize_conversation_tracking":
-    case "extract_message_context":
-    case "rcd_enrich_user_context":
-    case "rcd_validate_intent_classification":
-    case "update_creation_progress":
-    case "classify_feedback_type":
-    case "detect_service_integrations":
-    case "check_service_module_exists":
-    case "update_integration_progress":
-    case "auto_generate_service_integration":
-    case "await_credential_input":
-    case "test_service_connection":
-    case "display_live_data_sample":
-    case "process_correction_feedback":
-    case "log_positive_feedback":
-    case "handle_clarification_request":
-    case "log_negative_feedback":
-    case "query_user_agents":
-    case "format_agent_list":
-    case "gather_performance_metrics":
-    case "extract_button_context":
-    case "initiate_credential_collection":
-    case "retry_last_request":
-    case "validate_webhook_payload":
-    case "extract_message_from_webhook":
-    case "calculate_operation_performance":
-    case "enhance_context_with_patterns":
-    case "enhance_intent_with_context":
-      return executeInternalOperation(stepKey, stepValue, context, rData);
-
     default:
+      // Smart routing: internal operations vs module functions
+      if (rData.operations?.[stepKey]) {
+        return executeInternalOperation(stepKey, stepValue, context, rData);
+      }
       return executeModuleFunction(stepKey, stepValue, context);
   }
 }
