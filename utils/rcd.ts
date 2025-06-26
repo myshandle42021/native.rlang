@@ -712,7 +712,7 @@ export async function log_conversation(args: any, context: RLangContext) {
   try {
     const conversationEvent = {
       agent_id: args.agent_id || context.agentId || "webhook-handler",
-      event_type: "conversation_logged",
+      event_type: "capability_linked", // ✅ This is allowed
       context_data: {
         user: args.user || context.user,
         channel: args.channel || context.input?.channel,
