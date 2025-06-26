@@ -79,7 +79,7 @@ operations:
       }
 
     # Enhanced natural language intent extraction using intent-detector
-     - run: ["r/system/intent-detector.r", "analyze_user_request", {
+    - run: ["r/system/intent-detector.r", "analyze_user_request", {
          text: "${message_context.text}",
          context: {
            conversation_type: "agent_creation_and_system_interaction",
@@ -102,7 +102,7 @@ operations:
 
     # Route based on classified intent
     - condition:
-        switch: "${validated_intent.action || run_result}"
+        switch: "${validated_intent.action || run_result.action}"
         cases:
           # Agent creation flow - The main demo path
           - create_agent:
