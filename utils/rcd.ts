@@ -13,7 +13,7 @@ function isError(error: unknown): error is Error {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (isError(error)) return getErrorMessage(error);
+  if (isError(error)) return error.message;
   if (typeof error === "string") return error;
   if (error && typeof error === "object" && "message" in error) {
     return String((error as any).message);
