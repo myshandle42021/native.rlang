@@ -406,7 +406,9 @@ export async function logLearningEvent(args: any, context: RLangContext) {
     patterns_involved: args.patterns_involved || [],
     files_involved: args.files_involved || [],
     duration_ms: args.duration_ms || args.execution_duration_ms,
-    error_message: args.getErrorMessage ? args.getErrorMessage(error) : args.error_details || args.error_details,
+    error_message: args.getErrorMessage
+      ? args.getErrorMessage(error)
+      : args.error_details || args.error_details,
     operation_name: args.operation_name,
     success: args.success !== undefined ? args.success : true,
     performance_metrics: args.performance_metrics || {},
@@ -644,6 +646,74 @@ function parseTimeWindow(timeWindow: string): number {
   return parseInt(value) * units[unit as keyof typeof units];
 }
 
+// Missing function: check_intent_confidence
+export async function check_intent_confidence(
+  args: any,
+  context: RLangContext,
+) {
+  try {
+    const intent = args.intent || args;
+    const confidence = args.confidence || intent.confidence || 0.5;
+
+    // Calculate confidence based on completeness and clarity
+    let calculatedConfidence = confidence;
+
+    // Boost confidence if we have clear service requirements
+    if (intent.system_integrations?.required_services?.length > 0) {
+      calculatedConfidence += 0.2;
+    }
+
+    // Boost confidence if we have clear agent type
+    if (
+      intent.agent_requirements?.agent_type &&
+      intent.agent_requirements.agent_type !== "custom"
+    ) {
+      calculatedConfidence += 0.2;
+    }
+
+    // Boost confidence if we have clear purpose
+    if (
+      intent.agent_requirements?.primary_purpose &&
+      intent.agent_requirements.primary_purpose.length > 10
+    ) {
+      calculatedConfidence += 0.1;
+    }
+
+    // Cap at 1.0
+    calculatedConfidence = Math.min(calculatedConfidence, 1.0);
+
+    const result = {
+      confidence: calculatedConfidence,
+      confidence_level:
+        calculatedConfidence > 0.7
+          ? "high"
+          : calculatedConfidence > 0.4
+            ? "medium"
+            : "low",
+      ready_for_creation: calculatedConfidence > 0.6,
+      intent_clarity: {
+        agent_type_clear: !!intent.agent_requirements?.agent_type,
+        purpose_clear: !!intent.agent_requirements?.primary_purpose,
+        services_clear: !!intent.system_integrations?.required_services?.length,
+      },
+    };
+
+    console.log(
+      `🎯 Intent confidence: ${(calculatedConfidence * 100).toFixed(1)}% (${result.confidence_level})`,
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Error checking intent confidence:", error);
+    return {
+      confidence: 0.1,
+      confidence_level: "low",
+      ready_for_creation: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 // ================================
 // CLEAN EXPORT ALIASES - NO CONFLICTS
 // ================================
@@ -683,12 +753,10 @@ export const register_agent = registerAgent;
 export const initialize_learning_tracking = initializeLearningTracking;
 export const initialize_routing_system = initializeRoutingSystem;
 
-
-
 // Missing function: get_user_profile
 export async function get_user_profile(args: any, context: RLangContext) {
   const userId = args.user_id || context.user;
-  
+
   try {
     // Return basic profile (skip database for now)
     return {
@@ -699,15 +767,15 @@ export async function get_user_profile(args: any, context: RLangContext) {
           name: context.user || userId,
           preferences: {},
           capabilities: [],
-          role: "user"
-        }
-      }
+          role: "user",
+        },
+      },
     };
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    console.error("Error getting user profile:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
