@@ -652,11 +652,6 @@ operations:
           active: true
         }
 
-  # Webhook listener setup
-  start_webhook_listener:
-    - tamr.log: { event: "rocketchat_webhook_listener_started" }
-    # This triggers auto-generation of rocketchat.ts when first message is processed
-
   # Missing internal operations
   extract_message_context:
     - return: {
@@ -696,12 +691,12 @@ operations:
     - validate_webhook_payload: { payload: "${input}" }
     - extract_message_from_webhook: { webhook_data: "${input}" }
     - condition:
-        if: "${extracted_message.valid}"
+        if: "${extract_message_from_webhook.valid}"
         then:
           - run:
               - "rocketchat-intake.r"
               - "message_handler"
-              - "${extracted_message}"
+              - "${extract_message_from_webhook}"
         else:
           - tamr.log: { event: "invalid_webhook_payload", payload: "${input}" }
 

@@ -67,7 +67,7 @@ export async function executeSteps(
       });
 
       if (stepResult.output !== undefined) {
-        context.memory = { ...context.memory, ...stepResult.output, [stepResult.stepName]: stepResult.output };
+        context.memory = { ...context.memory, ...stepResult.output };
         output = stepResult.output;
       }
     } catch (error) {
@@ -276,7 +276,7 @@ async function executeStep(step: RLangStep, context: RLangContext, rData: any) {
 
   switch (stepKey) {
     case "condition":
-      return executeConditionalStep(resolveValue(stepValue, context), context, rData);
+      return executeConditionalStep(stepValue, context, rData);
     case "loop":
       return executeLoopStep(stepValue, context, rData);
     case "run":
@@ -289,12 +289,10 @@ async function executeStep(step: RLangStep, context: RLangContext, rData: any) {
       return executeSelfModifyStep(stepValue, context);
     case "self.reflect":
       return executeSelfReflectStep(stepValue, context);
-    case "return":
-      return executeReturnStep(stepValue, context);
     default:
       // Smart routing: internal operations vs module functions
       if (rData.operations?.[stepKey]) {
-        return executeInternalOperation(stepKey, resolveValue(stepValue, context), context, rData);
+        return executeInternalOperation(stepKey, stepValue, context, rData);
       }
       return executeModuleFunction(stepKey, stepValue, context);
   }
@@ -388,10 +386,6 @@ async function executeSelfReflectStep(reflect: any, context: RLangContext) {
   return { stepName: "self.reflect", input: reflect, output };
 }
 
-async function executeReturnStep(returnValue: any, context: RLangContext) {
-  const resolvedValue = resolveValue(returnValue, context);
-  return { stepName: "return", input: returnValue, output: resolvedValue };
-}
 async function executeInternalOperation(
   operationName: string,
   args: any,
@@ -406,14 +400,10 @@ async function executeInternalOperation(
     );
   }
 
-  // Execute the internal operation with resolved args as input
-  const resolvedArgs = args;
-  const operationContext = {
-    ...context,
-    input: resolvedArgs
-  };
-  const result = await executeSteps(operation, operationContext, rData);
-  return { stepName: operationName, input: args, output: result.output };}
+  // Execute the internal operation
+  const result = await executeSteps(operation, context, rData);
+  return { stepName: operationName, input: args, output: result.output };
+}
 
 // 🔧 Universal Service Module Generator
 async function generateServiceModule(
@@ -513,31 +503,20 @@ function resolveValue(value: any, context: RLangContext): any {
   if (value === undefined || value === null) return value;
   if (typeof value === "string" && value.includes("${")) {
     try {
-      // Check if this is a pure variable reference (entire string is just ${variable})
-      const pureMatch = value.match(/^\$\{([^}]+)\}$/);
-      if (pureMatch) {
-        // Pure reference - return the object directly
-        const path = pureMatch[1];
+      return value.replace(/\$\{([^}]+)\}/g, (match, path) => {
         const keys = path.split(".");
         let result: any = context;
         for (const key of keys) {
           result = result?.[key];
         }
-        return result ?? value;
-      } else {
-        // Mixed string - stringify objects in replacements
-        return value.replace(/\$\{([^}]+)\}/g, (match, path) => {
-          const keys = path.split(".");
-          let result: any = context;
-          for (const key of keys) {
-            result = result?.[key];
-          }
-          return String(result ?? match);
-        });
-      }
+        return String(result ?? match);
+      });
     } catch (err) {
       return value;
     }
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveValue(item, context));
   }
   if (typeof value === "object" && value !== null) {
     const resolved: any = {};

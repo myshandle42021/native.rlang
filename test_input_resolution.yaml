@@ -1,0 +1,6 @@
+operations:
+  test_input:
+    - return: { 
+        received_input: "${input}",
+        input_type: "${input.msg}"
+      }
