@@ -91,11 +91,21 @@ export async function getFunction(
       );
 
       if (rcdResult?.provider) {
-        const providerModule = await import(`../${rcdResult.provider.replace}`);
+        const providerModule = await import(`../${rcdResult.provider}`);
         if (providerModule[functionName]) {
           return providerModule[functionName];
         }
       }
+    }
+
+    // FALLBACK: Try direct utils import
+    try {
+      const utilsModule = await import(`./${module}`);
+      if (utilsModule[functionName]) {
+        return utilsModule[functionName];
+      }
+    } catch (utilsError) {
+      // Continue to function registry fallback
     }
 
     // FALLBACK: Existing logic unchanged
@@ -104,14 +114,28 @@ export async function getFunction(
       return moduleRegistry.get(functionName)!;
     }
 
-    // Dynamic import fallback (unchanged)
-    const dynamicModule = await import(`../${module}`);
-    if (dynamicModule[functionName]) {
-      await registerFunction(module, functionName, dynamicModule[functionName]);
-      return dynamicModule[functionName];
+    // FINAL FALLBACK: Direct module path attempts
+    const attemptPaths = [
+      `./${module}`, // utils/rocketchat
+      `../utils/${module}`, // ../utils/rocketchat
+      `../${module}`, // ../rocketchat
+    ];
+
+    for (const path of attemptPaths) {
+      try {
+        const module_import = await import(path);
+        if (module_import[functionName]) {
+          console.log(`✅ Found ${module}.${functionName} at ${path}`);
+          return module_import[functionName];
+        }
+      } catch (err) {
+        // Continue to next path
+      }
     }
 
-    throw new Error(`Function ${functionName} not found in module ${module}`);
+    throw new Error(
+      `Function ${functionName} not found in module ${module}. Available paths tried: ${attemptPaths.join(", ")}`,
+    );
   } catch (error) {
     console.error(
       `Function resolution failed for ${module}.${functionName}:`,

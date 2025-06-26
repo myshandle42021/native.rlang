@@ -372,3 +372,8 @@ export const dbUtils = {
     }
   },
 };
+
+// Standalone exports for R-lang step executor
+export async function health(args: any, context: any) {
+  return db.health();
+}

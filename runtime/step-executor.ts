@@ -67,7 +67,11 @@ export async function executeSteps(
       });
 
       if (stepResult.output !== undefined) {
-        context.memory = { ...context.memory, ...stepResult.output, [stepResult.stepName]: stepResult.output };
+        context.memory = {
+          ...context.memory,
+          ...stepResult.output,
+          [stepResult.stepName]: stepResult.output,
+        };
         output = stepResult.output;
       }
     } catch (error) {
@@ -96,172 +100,188 @@ async function executeModuleFunction(
   const [module, funcName] = funcPath.split(".");
 
   try {
-    // Try RCD resolution first
-    if (rcdResolver) {
-      const rcdResult = await rcdResolver(`${module}_integration`, context);
-      if (rcdResult?.provider) {
-        const providerModule = await import(`../${rcdResult.provider}`);
-        if (providerModule[funcName]) {
-          const resolvedArgs = resolveValue(stepValue, context);
-          const output = await providerModule[funcName](resolvedArgs, context);
-          return { stepName: funcPath, input: resolvedArgs, output };
-        }
-      }
-    }
-
-    // Try to load existing module
-    const moduleFile = await import(`../utils/${module}`);
-    const func = moduleFile[funcName];
-
-    if (!func) {
-      throw new Error(`Function ${funcName} not found in ${module}`);
-    }
-
+    // TRY: Use getFunction first (this will check registry and utils paths)
+    const func = await getFunction(module, funcName, context);
     const resolvedArgs = resolveValue(stepValue, context);
     const output = await func(resolvedArgs, context);
     return { stepName: funcPath, input: resolvedArgs, output };
-  } catch (error) {
-    // 🎯 AUTO-GENERATION TRIGGER - This is the magic moment!
-    if (
-      error instanceof Error &&
-      (error.message.includes("Cannot resolve module") ||
-        error.message.includes("ENOENT") ||
-        error.message.includes("does not provide an export"))
-    ) {
-      console.log(
-        `🪄 Service Integration Magic: Auto-generating ${module} module...`,
-      );
-
-      // Real-time progress notification
-      if (context.input?.channel) {
-        try {
-          const rocketchat = await getFunction("rocketchat", "sendMessage");
-          await rocketchat(
-            {
-              channel: context.input.channel,
-              text: `🔧 **Auto-Generation Triggered**\n\nDetected missing ${module} integration. Generating universal service module...`,
-              attachments: [
-                {
-                  color: "warning",
-                  title: "Service Integration Magic",
-                  text: `Creating ${module}.ts from universal template`,
-                  fields: [
-                    { title: "Service", value: module, short: true },
-                    { title: "Function", value: funcName, short: true },
-                    {
-                      title: "Template",
-                      value: "service-template.ts",
-                      short: true,
-                    },
-                    { title: "Status", value: "🔄 Generating...", short: true },
-                  ],
-                },
-              ],
-            },
-            context,
-          );
-        } catch (notificationError) {
-          console.warn(
-            "Failed to send auto-generation notification:",
-            notificationError,
-          );
+  } catch (getFunctionError) {
+    // FALLBACK: Original logic for auto-generation
+    try {
+      // Try RCD resolution first
+      if (rcdResolver) {
+        const rcdResult = await rcdResolver(`${module}_integration`, context);
+        if (rcdResult?.provider) {
+          const providerModule = await import(`../${rcdResult.provider}`);
+          if (providerModule[funcName]) {
+            const resolvedArgs = resolveValue(stepValue, context);
+            const output = await providerModule[funcName](
+              resolvedArgs,
+              context,
+            );
+            return { stepName: funcPath, input: resolvedArgs, output };
+          }
         }
       }
 
-      // Delegate to service integration template
-      const { runRLang } = await import("./interpreter");
-      const generationResult = await runRLang({
-        file: "r/templates/service-integration.r",
-        operation: "auto_generate_service_module",
-        input: {
-          service_name: module,
-          required_function: funcName,
-          context: context,
-        },
-        context: context,
-      });
+      // Try to load existing module (original logic)
+      const moduleFile = await import(`../utils/${module}`);
+      const func = moduleFile[funcName];
 
-      if (!generationResult.success) {
-        throw new Error(`Auto-generation failed: ${generationResult.error}`);
+      if (!func) {
+        throw new Error(`Function ${funcName} not found in ${module}`);
       }
 
-      // Success notification
-      if (context.input?.channel) {
-        try {
-          const rocketchat = await getFunction("rocketchat", "sendMessage");
-          await rocketchat(
-            {
-              channel: context.input.channel,
-              text: `✅ **${module} Integration Generated!**`,
-              attachments: [
-                {
-                  color: "good",
-                  title: "Module Created Successfully",
-                  text: `utils/${module}.ts generated from universal template`,
-                  fields: [
-                    {
-                      title: "Functions",
-                      value:
-                        generationResult.result?.functions_created?.join(
-                          ", ",
-                        ) || funcName,
-                      short: true,
-                    },
-                    {
-                      title: "Auth Type",
-                      value: generationResult.result?.auth_type || "Detected",
-                      short: true,
-                    },
-                  ],
-                },
-              ],
-            },
-            context,
-          );
-        } catch (notificationError) {
-          console.warn(
-            "Failed to send success notification:",
-            notificationError,
-          );
+      const resolvedArgs = resolveValue(stepValue, context);
+      const output = await func(resolvedArgs, context);
+      return { stepName: funcPath, input: resolvedArgs, output };
+    } catch (error) {
+      // 🎯 AUTO-GENERATION TRIGGER - This is the magic moment!
+      if (
+        error instanceof Error &&
+        (error.message.includes("Cannot resolve module") ||
+          error.message.includes("ENOENT") ||
+          error.message.includes("does not provide an export"))
+      ) {
+        console.log(
+          `🪄 Service Integration Magic: Auto-generating ${module} module...`,
+        );
+
+        // Real-time progress notification
+        if (context.input?.channel) {
+          try {
+            const rocketchat = await getFunction("rocketchat", "sendMessage");
+            await rocketchat(
+              {
+                channel: context.input.channel,
+                text: `🔧 **Auto-Generation Triggered**\n\nDetected missing ${module} integration. Generating universal service module...`,
+                attachments: [
+                  {
+                    color: "warning",
+                    title: "Service Integration Magic",
+                    text: `Creating ${module}.ts from universal template`,
+                    fields: [
+                      { title: "Service", value: module, short: true },
+                      { title: "Function", value: funcName, short: true },
+                      {
+                        title: "Template",
+                        value: "service-template.ts",
+                        short: true,
+                      },
+                      {
+                        title: "Status",
+                        value: "🔄 Generating...",
+                        short: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+              context,
+            );
+          } catch (notificationError) {
+            console.warn(
+              "Failed to send auto-generation notification:",
+              notificationError,
+            );
+          }
         }
-      }
 
-      // Now retry the original call with the generated module
-      try {
-        const generatedModule = await import(`../utils/${module}`);
-        const generatedFunc = generatedModule[funcName];
-
-        if (!generatedFunc) {
-          throw new Error(
-            `Generated module ${module} does not export function ${funcName}`,
-          );
-        }
-
-        const resolvedArgs = resolveValue(stepValue, context);
-        const output = await generatedFunc(resolvedArgs, context);
-
-        return {
-          stepName: funcPath,
-          input: resolvedArgs,
-          output: {
-            ...output,
-            _auto_generated: true,
-            _generation_timestamp: new Date().toISOString(),
+        // Delegate to service integration template
+        const { runRLang } = await import("./interpreter");
+        const generationResult = await runRLang({
+          file: "r/templates/service-integration.r",
+          operation: "auto_generate_service_module",
+          input: {
+            service_name: module,
+            required_function: funcName,
+            context: context,
           },
-        };
-      } catch (retryError) {
-        console.error(
-          `Failed to execute generated ${module}.${funcName}:`,
-          retryError,
-        );
-        throw new Error(
-          `Generated module execution failed: ${retryError instanceof Error ? retryError.message : String(retryError)}`,
-        );
-      }
-    }
+          context: context,
+        });
 
-    // If it's not a missing module error, rethrow
-    throw error;
+        if (!generationResult.success) {
+          throw new Error(`Auto-generation failed: ${generationResult.error}`);
+        }
+
+        // Success notification
+        if (context.input?.channel) {
+          try {
+            const rocketchat = await getFunction("rocketchat", "sendMessage");
+            await rocketchat(
+              {
+                channel: context.input.channel,
+                text: `✅ **${module} Integration Generated!**`,
+                attachments: [
+                  {
+                    color: "good",
+                    title: "Module Created Successfully",
+                    text: `utils/${module}.ts generated from universal template`,
+                    fields: [
+                      {
+                        title: "Functions",
+                        value:
+                          generationResult.result?.functions_created?.join(
+                            ", ",
+                          ) || funcName,
+                        short: true,
+                      },
+                      {
+                        title: "Auth Type",
+                        value: generationResult.result?.auth_type || "Detected",
+                        short: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+              context,
+            );
+          } catch (notificationError) {
+            console.warn(
+              "Failed to send success notification:",
+              notificationError,
+            );
+          }
+        }
+
+        // Now retry the original call with the generated module
+        try {
+          const generatedModule = await import(`../utils/${module}`);
+          const generatedFunc = generatedModule[funcName];
+
+          if (!generatedFunc) {
+            throw new Error(
+              `Generated module ${module} does not export function ${funcName}`,
+            );
+          }
+
+          const resolvedArgs = resolveValue(stepValue, context);
+          const output = await generatedFunc(resolvedArgs, context);
+
+          return {
+            stepName: funcPath,
+            input: resolvedArgs,
+            output: {
+              ...output,
+              _auto_generated: true,
+              _generation_timestamp: new Date().toISOString(),
+            },
+          };
+        } catch (retryError) {
+          console.error(
+            `Failed to execute generated ${module}.${funcName}:`,
+            retryError,
+          );
+          throw new Error(
+            `Generated module execution failed: ${retryError instanceof Error ? retryError.message : String(retryError)}`,
+          );
+        }
+      }
+
+      // If it's not a missing module error, rethrow
+      throw error;
+    }
   }
 }
 
@@ -276,7 +296,11 @@ async function executeStep(step: RLangStep, context: RLangContext, rData: any) {
 
   switch (stepKey) {
     case "condition":
-      return executeConditionalStep(resolveValue(stepValue, context), context, rData);
+      return executeConditionalStep(
+        resolveValue(stepValue, context),
+        context,
+        rData,
+      );
     case "loop":
       return executeLoopStep(stepValue, context, rData);
     case "run":
@@ -291,10 +315,19 @@ async function executeStep(step: RLangStep, context: RLangContext, rData: any) {
       return executeSelfReflectStep(stepValue, context);
     case "return":
       return executeReturnStep(stepValue, context);
+    case "set_memory":
+      return executeSetMemoryStep(stepValue, context);
+    case "append_to_array":
+      return executeAppendToArrayStep(stepValue, context);
     default:
       // Smart routing: internal operations vs module functions
       if (rData.operations?.[stepKey]) {
-        return executeInternalOperation(stepKey, resolveValue(stepValue, context), context, rData);
+        return executeInternalOperation(
+          stepKey,
+          resolveValue(stepValue, context),
+          context,
+          rData,
+        );
       }
       return executeModuleFunction(stepKey, stepValue, context);
   }
@@ -392,6 +425,35 @@ async function executeReturnStep(returnValue: any, context: RLangContext) {
   const resolvedValue = resolveValue(returnValue, context);
   return { stepName: "return", input: returnValue, output: resolvedValue };
 }
+
+async function executeSetMemoryStep(setMemory: any, context: RLangContext) {
+  // Update context memory with the provided key-value pairs
+  for (const [key, value] of Object.entries(setMemory)) {
+    const resolvedValue = resolveValue(value, context);
+    context.memory[key] = resolvedValue;
+  }
+  return { stepName: "set_memory", input: setMemory, output: setMemory };
+}
+
+async function executeAppendToArrayStep(
+  appendArgs: any,
+  context: RLangContext,
+) {
+  const arrayName = appendArgs.array;
+  const item = resolveValue(appendArgs.item, context);
+
+  // Get the current array from memory
+  const currentArray = context.memory[arrayName] || [];
+
+  // Append the item
+  const newArray = [...currentArray, item];
+
+  // Update memory
+  context.memory[arrayName] = newArray;
+
+  return { stepName: "append_to_array", input: appendArgs, output: newArray };
+}
+
 async function executeInternalOperation(
   operationName: string,
   args: any,
@@ -410,10 +472,11 @@ async function executeInternalOperation(
   const resolvedArgs = args;
   const operationContext = {
     ...context,
-    input: resolvedArgs
+    input: resolvedArgs,
   };
   const result = await executeSteps(operation, operationContext, rData);
-  return { stepName: operationName, input: args, output: result.output };}
+  return { stepName: operationName, input: args, output: result.output };
+}
 
 // 🔧 Universal Service Module Generator
 async function generateServiceModule(
@@ -511,6 +574,7 @@ function getHttpMethod(endpointName: string): string {
 
 function resolveValue(value: any, context: RLangContext): any {
   if (value === undefined || value === null) return value;
+
   if (typeof value === "string" && value.includes("${")) {
     try {
       // Check if this is a pure variable reference (entire string is just ${variable})
@@ -518,27 +582,24 @@ function resolveValue(value: any, context: RLangContext): any {
       if (pureMatch) {
         // Pure reference - return the object directly
         const path = pureMatch[1];
-        const keys = path.split(".");
-        let result: any = context;
-        for (const key of keys) {
-          result = result?.[key];
-        }
-        return result ?? value;
+        const result = getValueByPath(path, context);
+        return result !== undefined ? result : value;
       } else {
         // Mixed string - stringify objects in replacements
         return value.replace(/\$\{([^}]+)\}/g, (match, path) => {
-          const keys = path.split(".");
-          let result: any = context;
-          for (const key of keys) {
-            result = result?.[key];
-          }
-          return String(result ?? match);
+          const result = getValueByPath(path, context);
+          return result !== undefined ? String(result) : match;
         });
       }
     } catch (err) {
       return value;
     }
   }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveValue(item, context));
+  }
+
   if (typeof value === "object" && value !== null) {
     const resolved: any = {};
     for (const [key, val] of Object.entries(value)) {
@@ -546,7 +607,88 @@ function resolveValue(value: any, context: RLangContext): any {
     }
     return resolved;
   }
+
   return value;
+}
+
+// NEW helper function to get values by path
+function getValueByPath(path: string, context: RLangContext): any {
+  const keys = path.split(".");
+  let result: any = context;
+
+  // Try different context sources in order of priority
+  const sources = [
+    context.memory, // Try memory first (where set_memory stores values)
+    context.input, // Then input
+    context, // Then context root
+  ];
+
+  for (const source of sources) {
+    let current = source;
+    let found = true;
+
+    // Navigate the path
+    for (const key of keys) {
+      if (current === null || current === undefined) {
+        found = false;
+        break;
+      }
+      current = current[key];
+    }
+
+    if (found && current !== undefined) {
+      return current;
+    }
+  }
+
+  // Handle special cases
+  if (path === "Date.now()") {
+    return Date.now();
+  }
+
+  if (path.startsWith("Math.")) {
+    try {
+      // Handle Math operations like Math.floor(system_stats.memory.total / 1024 / 1024)
+      const expression = path.replace(/\$\{([^}]+)\}/g, (match, innerPath) => {
+        const innerValue = getValueByPath(innerPath, context);
+        return innerValue !== undefined ? String(innerValue) : match;
+      });
+
+      // Simple Math operations - you could expand this
+      if (expression.includes("Math.floor")) {
+        const innerExpr = expression.match(/Math\.floor\((.+)\)/)?.[1];
+        if (innerExpr) {
+          const value = evaluateSimpleExpression(innerExpr, context);
+          return Math.floor(value);
+        }
+      }
+    } catch (err) {
+      // Fall through to undefined
+    }
+  }
+
+  return undefined;
+}
+
+// Helper to evaluate simple math expressions
+function evaluateSimpleExpression(expr: string, context: RLangContext): number {
+  // Replace variables with values
+  const resolved = expr.replace(/([a-zA-Z_][a-zA-Z0-9_.]*)/g, (match) => {
+    const value = getValueByPath(match, context);
+    return typeof value === "number" ? String(value) : match;
+  });
+
+  // Simple evaluation for basic arithmetic
+  try {
+    // Only allow safe operations
+    if (/^[\d\s+\-*/().]+$/.test(resolved)) {
+      return Function(`"use strict"; return (${resolved})`)();
+    }
+  } catch (err) {
+    // Fall through
+  }
+
+  return 0;
 }
 
 function hasErrorHandling(step: RLangStep): boolean {

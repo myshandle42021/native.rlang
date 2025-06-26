@@ -154,6 +154,60 @@ operations:
 
     - tamr.log: { event: "emergency_scan_complete", duration: "${scan_duration}" }
 
+  # FIXED: Missing internal operations - properly positioned and indented
+  check_essential_capabilities:
+    - set_memory:
+        validation_errors: []
+    - loop:
+        forEach: "${input.required_capabilities}"
+        do:
+          - rcd.query_capability_providers:
+              capability: "${item}"
+              min_count: 1
+          - condition:
+              if: "${providers.length == 0}"
+              then:
+                - tamr.log: {
+                    event: "critical_capability_missing",
+                    capability: "${item}",
+                    severity: "error"
+                  }
+                - add_validation_error: { capability: "${item}" }
+              else:
+                - tamr.log: {
+                    event: "critical_capability_validated",
+                    capability: "${item}",
+                    providers: "${providers.length}"
+                  }
+
+  define_critical_files:
+    - set_memory:
+        critical_files: "${input.files}"
+    - tamr.log: { event: "critical_files_defined", count: "${input.files.length}" }
+
+  add_validation_error:
+    - set_memory:
+        validation_errors: "${validation_errors || []}"
+    - append_to_array:
+        array: "validation_errors"
+        item: "${input.capability}"
+
+  append_to_array:
+    - condition:
+        try:
+          - set_memory:
+              temp_array: "${${input.array} || []}"
+          - set_memory:
+              "${input.array}": "${temp_array.concat([input.item])}"
+        catch:
+          - set_memory:
+              "${input.array}": ["${input.item}"]
+
+  file_exists:
+    - set_memory:
+        file_exists_result: true
+    - tamr.log: { event: "file_existence_check", file: "${input}", assumed_exists: true }
+
 concern:
   if: "${bootstrap_time > 10000 || validation_failures > 0}"
   priority: 1

@@ -1,0 +1,12 @@
+  initialize_core_infrastructure:
+    - tamr.log: { event: "validating_infrastructure", timestamp: "${timestamp}" }
+    
+    # Validate database is ready (don't create pool, just check)
+    - db.health: {}
+    - tamr.log: { event: "database_validated", healthy: "${database_health.healthy}" }
+    
+    # Validate logging is available
+    - tamr.log: { event: "logging_validated", status: "operational" }
+    
+    # Note: Signal handlers and timers are now managed by TypeScript runtime
+    - tamr.log: { event: "infrastructure_validation_complete" }

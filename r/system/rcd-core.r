@@ -16,7 +16,7 @@ operations:
   # Initialize RCD database schema
   schema_init:
     - tamr.log: { event: "rcd_schema_init", timestamp: "${timestamp}" }
-    - rcd.create_tables:
+    - rcd.createTables:
         tables:
           - name: "rcd_files"
             schema:

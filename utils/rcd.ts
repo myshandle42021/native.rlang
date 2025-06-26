@@ -22,7 +22,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 // ================================
-// CORE DATABASE OPERATIONS (unchanged)
+// CORE DATABASE OPERATIONS
 // ================================
 
 export async function query(sql: string, context: RLangContext) {
@@ -45,7 +45,7 @@ export async function executeSQL(args: any, context: RLangContext) {
 }
 
 // ================================
-// FILE SYSTEM OPERATIONS (what .r cannot do)
+// FILE SYSTEM OPERATIONS
 // ================================
 
 export async function readFileContent(args: any, context: RLangContext) {
@@ -100,11 +100,10 @@ export async function scanFiles(args: any, context: RLangContext) {
 }
 
 // ================================
-// EXISTING CORE RCD FUNCTIONS (unchanged)
+// CORE RCD FUNCTIONS
 // ================================
 
 export async function storeFileMetadata(args: any, context: RLangContext) {
-  // CRITICAL FIX: Build query first, then await it
   const fileInsertQuery = db
     .from("rcd_files")
     .insert(args)
@@ -136,11 +135,9 @@ export async function queryFileMetadata(args: any, context: RLangContext) {
 }
 
 export async function storePattern(args: any, context: RLangContext) {
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_patterns").insert(args);
   if (error)
     throw new Error(`Pattern storage failed: ${getErrorMessage(error)}`);
-  // CRITICAL FIX: Access id from returned data array
   return { stored: true, pattern_id: data?.[0]?.id };
 }
 
@@ -161,7 +158,6 @@ export async function queryPatterns(args: any, context: RLangContext) {
 }
 
 export async function storeCapability(args: any, context: RLangContext) {
-  // CRITICAL FIX: Build query first, then await it
   const capabilityInsertQuery = db
     .from("rcd_capabilities")
     .insert(args)
@@ -203,12 +199,54 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
     ...args,
   };
 
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_learning_events").insert(event);
   if (error)
     throw new Error(`Learning event storage failed: ${getErrorMessage(error)}`);
-  // CRITICAL FIX: Access id from returned data array
   return { stored: true, event_id: data?.[0]?.id };
+}
+
+export async function queryLearningEvents(args: any, context: RLangContext) {
+  let query = db.from("rcd_learning_events").select("*");
+
+  if (args.agent_id) query = query.eq("agent_id", args.agent_id);
+  if (args.event_type) query = query.eq("event_type", args.event_type);
+  if (args.outcome) query = query.eq("outcome", args.outcome);
+  if (args.since) query = query.gte("timestamp", args.since);
+  if (args.limit) query = query.limit(args.limit);
+
+  query = query.order("timestamp", { ascending: false });
+
+  const { data, error } = await query;
+  if (error)
+    throw new Error(`Learning events query failed: ${getErrorMessage(error)}`);
+  return data || [];
+}
+
+export async function storeAgent(args: any, context: RLangContext) {
+  const { data, error } = await db.from("rcd_agents").insert({
+    agent_id: args.agent_id,
+    capabilities: args.capabilities || [],
+    status: args.status || "active",
+    created_at: new Date(),
+    ...args,
+  });
+
+  if (error) throw new Error(`Agent storage failed: ${getErrorMessage(error)}`);
+  return { stored: true, data: data?.[0] };
+}
+
+export async function queryAgents(args: any, context: RLangContext) {
+  let query = db.from("rcd_agents").select("*");
+
+  if (args.agent_id) query = query.eq("agent_id", args.agent_id);
+  if (args.status) query = query.eq("status", args.status);
+  if (args.capability)
+    query = query.contains("capabilities", [args.capability]);
+  if (args.limit) query = query.limit(args.limit);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Agents query failed: ${getErrorMessage(error)}`);
+  return data || [];
 }
 
 // ================================
@@ -216,7 +254,6 @@ export async function storeLearningEvent(args: any, context: RLangContext) {
 // ================================
 
 export async function registerAgent(args: any, context: RLangContext) {
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_agents").insert({
     agent_id: args.agent_id,
     capabilities: args.capabilities,
@@ -248,7 +285,6 @@ export async function queryAgentCapabilities(args: any, context: RLangContext) {
 }
 
 export async function logPerformance(args: any, context: RLangContext) {
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_performance_logs").insert({
     agent_id: args.agent_id || context.agentId,
     operation: args.operation,
@@ -260,7 +296,6 @@ export async function logPerformance(args: any, context: RLangContext) {
 
   if (error)
     throw new Error(`Performance logging failed: ${getErrorMessage(error)}`);
-  // CRITICAL FIX: Access id from returned data array
   return { logged: true, log_id: data?.[0]?.id };
 }
 
@@ -268,7 +303,6 @@ export async function initializeLearningTracking(
   args: any,
   context: RLangContext,
 ) {
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_learning_tracking").insert({
     agent_id: args.agent_id,
     learning_patterns: args.learning_patterns,
@@ -281,7 +315,6 @@ export async function initializeLearningTracking(
     throw new Error(
       `Learning tracking initialization failed: ${getErrorMessage(error)}`,
     );
-  // CRITICAL FIX: Access id from returned data array
   return { initialized: true, tracking_id: data?.[0]?.id };
 }
 
@@ -289,7 +322,6 @@ export async function initializeRoutingSystem(
   args: any,
   context: RLangContext,
 ) {
-  // CRITICAL FIX: Proper database insert with return value handling
   const { data, error } = await db.from("rcd_routing_systems").insert({
     agent_id: args.agent_id,
     learning_patterns: args.learning_patterns,
@@ -303,46 +335,52 @@ export async function initializeRoutingSystem(
     throw new Error(
       `Routing system initialization failed: ${getErrorMessage(error)}`,
     );
-  // CRITICAL FIX: Access id from returned data array
   return { initialized: true, routing_id: data?.[0]?.id };
 }
 
 // ================================
-// CRITICAL FIX #2: PARAMETER MAPPING FUNCTIONS FOR R-LANG COMPATIBILITY
+// PARAMETER MAPPING FUNCTIONS FOR R-LANG COMPATIBILITY
 // ================================
 
-/**
- * CRITICAL FIX #2: Parameter mapping for R-lang capability queries
- * Maps R-lang parameter names to TypeScript expectations
- */
 export async function queryCapabilityProviders(
   args: any,
   context: RLangContext,
 ) {
-  // Map R-lang parameters to TypeScript expectations
-  const mappedArgs = {
-    capability_name: args.capability, // R-lang uses 'capability', TS expects 'capability_name'
-    category: args.category,
-    min_stability: args.min_performance_score || args.min_stability, // Handle both parameter names
-    status: args.status,
-    compatible_with: args.compatible_with,
-  };
+  try {
+    const capability = args.capability;
+    const minCount = args.min_count || 1;
 
-  // Call the existing function with mapped parameters
-  return queryCapabilities(mappedArgs, context);
+    const { data, error } = await db
+      .from("rcd_capabilities")
+      .select("*")
+      .eq("capability_name", capability)
+      .limit(10);
+
+    if (error) {
+      console.error("Error querying capability providers:", error);
+      return { providers: [] };
+    }
+
+    const providers = data || [];
+    return {
+      providers,
+      count: providers.length,
+      meets_minimum: providers.length >= minCount,
+    };
+  } catch (error) {
+    console.error("Error in queryCapabilityProviders:", error);
+    return { providers: [] };
+  }
 }
 
-/**
- * CRITICAL FIX #2: Parameter mapping for R-lang capability storage
- */
 export async function storeCapabilityProvider(
   args: any,
   context: RLangContext,
 ) {
   // Map R-lang store requests to TypeScript format
   const mappedArgs = {
-    capability_name: args.capability, // R-lang uses 'capability'
-    provider_files: args.provider_files || [args.provider], // Handle single or array
+    capability_name: args.capability,
+    provider_files: args.provider_files || [args.provider],
     category: args.category,
     stability_rating: args.stability_rating || 0.8,
     performance_score: args.performance_score || 0.7,
@@ -350,15 +388,12 @@ export async function storeCapabilityProvider(
     description: args.description,
     status: args.status || "active",
     compatible_with: args.compatible_with || [],
-    ...args, // Pass through any other args
+    ...args,
   };
 
   return storeCapability(mappedArgs, context);
 }
 
-/**
- * CRITICAL FIX #2: Parameter mapping for R-lang learning events
- */
 export async function logLearningEvent(args: any, context: RLangContext) {
   // Map learning event parameters
   const mappedArgs = {
@@ -382,9 +417,6 @@ export async function logLearningEvent(args: any, context: RLangContext) {
   return storeLearningEvent(mappedArgs, context);
 }
 
-/**
- * CRITICAL FIX #2: Parameter mapping for R-lang pattern queries
- */
 export async function queryAgentPatterns(args: any, context: RLangContext) {
   // Map R-lang pattern queries
   const mappedArgs = {
@@ -399,15 +431,12 @@ export async function queryAgentPatterns(args: any, context: RLangContext) {
   return queryPatterns(mappedArgs, context);
 }
 
-/**
- * CRITICAL FIX #2: Parameter mapping for R-lang file queries
- */
 export async function queryRcdFiles(args: any, context: RLangContext) {
   // Map R-lang file query parameters
   const mappedArgs = {
     file_type: args.file_type,
     capabilities: args.capabilities,
-    file_path: args.file_pattern || args.file_path, // R-lang may use 'file_pattern'
+    file_path: args.file_pattern || args.file_path,
     client_id: args.client_id,
     min_performance: args.min_performance_score,
   };
@@ -415,9 +444,6 @@ export async function queryRcdFiles(args: any, context: RLangContext) {
   return queryFileMetadata(mappedArgs, context);
 }
 
-/**
- * CRITICAL FIX #2: Enhanced file query with pattern support
- */
 export async function query_files(args: any, context: RLangContext) {
   let query = db.from("rcd_files").select("*");
 
@@ -442,28 +468,22 @@ export async function query_files(args: any, context: RLangContext) {
   return { files: data || [] };
 }
 
-/**
- * CRITICAL FIX #2: Unified interface for cache operations
- */
 export async function logCachePerformance(args: any, context: RLangContext) {
   const event = {
-    event_type: `cache_${args.type}`, // cache_hit, cache_miss
+    event_type: `cache_${args.type}`,
     context_data: {
       cache_type: args.type,
       capability: args.capability,
       provider: args.provider,
       response_time: args.response_time,
     },
-    impact_score: args.type === "hit" ? 0.1 : -0.1, // Cache hits are good
+    impact_score: args.type === "hit" ? 0.1 : -0.1,
     outcome: "success",
   };
 
   return storeLearningEvent(event, context);
 }
 
-/**
- * CRITICAL FIX #2: Unified interface for resolution logging
- */
 export async function logResolution(args: any, context: RLangContext) {
   const event = {
     event_type: "capability_resolved",
@@ -473,7 +493,7 @@ export async function logResolution(args: any, context: RLangContext) {
       resolution_time: args.resolution_time,
       cache_status: args.cache_miss ? "miss" : "hit",
     },
-    impact_score: args.resolution_time < 100 ? 0.2 : 0.0, // Fast resolution is good
+    impact_score: args.resolution_time < 100 ? 0.2 : 0.0,
     duration_ms: args.resolution_time,
     outcome: "success",
   };
@@ -481,9 +501,6 @@ export async function logResolution(args: any, context: RLangContext) {
   return storeLearningEvent(event, context);
 }
 
-/**
- * CRITICAL FIX #2: Database table creation/verification
- */
 export async function createTables(args: any, context: RLangContext) {
   // Verify all expected RCD tables exist
   const { data, error } = await db.query(`
@@ -521,8 +538,101 @@ export async function createTables(args: any, context: RLangContext) {
 }
 
 // ================================
-// UTILITY HELPER FUNCTIONS
+// CRITICAL MISSING FUNCTIONS FOR MAIN.TS
 // ================================
+
+export async function queryFileCount(args: any, context: RLangContext) {
+  try {
+    // Use a simple count query
+    const { count, error } = await db
+      .from("rcd_files")
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.warn("Database count failed, using fallback:", error);
+      // Fallback: query all records and count them
+      const { data: files } = await db.from("rcd_files").select("id");
+      return { file_count: files?.length || 0 };
+    }
+
+    return { file_count: count || 0 };
+  } catch (error) {
+    console.error("Error in queryFileCount:", error);
+    return { file_count: 0 };
+  }
+}
+
+export async function buildMinimalCapabilityIndex(
+  args: any,
+  context: RLangContext,
+) {
+  try {
+    const files = args.files || [];
+    console.log(`🔗 Building capability index for ${files.length} files`);
+
+    // For each file, extract basic capability info
+    let processedCount = 0;
+    for (const filePath of files) {
+      try {
+        // Basic capability extraction - can be enhanced later
+        const capabilities = extractBasicCapabilities(filePath);
+        if (capabilities.length > 0) {
+          await storeCapability(
+            {
+              capability_name: `file_${filePath.replace(/[^a-zA-Z0-9]/g, "_")}`,
+              provider_files: [filePath],
+              interface_spec: { capabilities },
+              stability_rating: 0.7,
+              performance_score: 0.5,
+              category: "file_based",
+            },
+            context,
+          );
+        }
+        processedCount++;
+      } catch (fileError) {
+        console.warn(`⚠️ Failed to process ${filePath}:`, fileError);
+      }
+    }
+
+    return {
+      index_built: true,
+      files_processed: processedCount,
+      total_files: files.length,
+    };
+  } catch (error) {
+    console.error("Error building capability index:", error);
+    return {
+      index_built: false,
+      error: error.message,
+      files_processed: 0,
+    };
+  }
+}
+
+// ================================
+// HELPER FUNCTIONS
+// ================================
+
+function extractBasicCapabilities(filePath: string): string[] {
+  const capabilities: string[] = [];
+
+  // Extract capabilities based on file patterns
+  if (filePath.includes("bootstrap")) {
+    capabilities.push("system_bootstrap", "infrastructure_setup");
+  }
+  if (filePath.includes("rcd")) {
+    capabilities.push("capability_resolution", "metadata_management");
+  }
+  if (filePath.includes("agent")) {
+    capabilities.push("agent_execution", "workflow_management");
+  }
+  if (filePath.includes("system")) {
+    capabilities.push("system_operations", "core_functionality");
+  }
+
+  return capabilities;
+}
 
 function parseTimeWindow(timeWindow: string): number {
   const units = { h: 3600000, d: 86400000, m: 60000, s: 1000 };
@@ -535,26 +645,40 @@ function parseTimeWindow(timeWindow: string): number {
 }
 
 // ================================
-// ALIAS FUNCTIONS FOR BACKWARDS COMPATIBILITY
+// CLEAN EXPORT ALIASES - NO CONFLICTS
 // ================================
 
-// Critical aliases to maintain compatibility with R-lang calls
+// Core function aliases for R-lang compatibility
 export const write = storeFileMetadata;
 export const read = queryFileMetadata;
-export const log_learning_event = logLearningEvent;
-export const query_capability_providers = queryCapabilityProviders;
-export const store_capability = storeCapabilityProvider;
-export const log_cache_performance = logCachePerformance;
-export const log_resolution = logResolution;
-export const query_agent_patterns = queryAgentPatterns;
-export const query_rcd_files = queryRcdFiles;
 
-// Additional compatibility aliases
-export const store_capability_provider = storeCapabilityProvider;
+// R-lang style function names
 export const store_file_metadata = storeFileMetadata;
 export const query_file_metadata = queryFileMetadata;
+export const store_pattern = storePattern;
+export const query_patterns = queryPatterns;
+export const store_capability = storeCapability;
+export const query_capabilities = queryCapabilities;
 export const store_learning_event = storeLearningEvent;
-export const register_agent = registerAgent;
+export const query_learning_events = queryLearningEvents;
+export const store_agent = storeAgent;
+export const query_agents = queryAgents;
+
+// Missing function aliases that main.ts needs
+export const query_file_count = queryFileCount;
+export const build_minimal_capability_index = buildMinimalCapabilityIndex;
+export const query_capability_providers = queryCapabilityProviders;
+export const store_capability_provider = storeCapabilityProvider;
+
+// Performance and logging aliases
+export const log_learning_event = logLearningEvent;
+export const log_cache_performance = logCachePerformance;
+export const log_resolution = logResolution;
 export const log_performance = logPerformance;
+
+// Additional compatibility
+export const query_agent_patterns = queryAgentPatterns;
+export const query_rcd_files = queryRcdFiles;
+export const register_agent = registerAgent;
 export const initialize_learning_tracking = initializeLearningTracking;
 export const initialize_routing_system = initializeRoutingSystem;
