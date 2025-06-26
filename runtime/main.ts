@@ -130,7 +130,10 @@ async function startROL3() {
             };
           } catch (error) {
             console.error("Error building capability index:", error);
-            return { index_built: false, error: error.message };
+            return {
+              index_built: false,
+              error: error instanceof Error ? error.message : String(error),
+            };
           }
         },
       );

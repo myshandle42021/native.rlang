@@ -406,9 +406,7 @@ export async function logLearningEvent(args: any, context: RLangContext) {
     patterns_involved: args.patterns_involved || [],
     files_involved: args.files_involved || [],
     duration_ms: args.duration_ms || args.execution_duration_ms,
-    error_message: args.getErrorMessage
-      ? args.getErrorMessage(error)
-      : args.error_details || args.error_details,
+    error_message: args.error_details || args.error_message || "unknown error",
     operation_name: args.operation_name,
     success: args.success !== undefined ? args.success : true,
     performance_metrics: args.performance_metrics || {},
@@ -545,19 +543,14 @@ export async function createTables(args: any, context: RLangContext) {
 
 export async function queryFileCount(args: any, context: RLangContext) {
   try {
-    // Use a simple count query
-    const { count, error } = await db
-      .from("rcd_files")
-      .select("*", { count: "exact", head: true });
+    const { data, error } = await db.query("SELECT id FROM rcd_files");
 
     if (error) {
-      console.warn("Database count failed, using fallback:", error);
-      // Fallback: query all records and count them
-      const { data: files } = await db.from("rcd_files").select("id");
-      return { file_count: files?.length || 0 };
+      console.warn("Database query failed:", error);
+      return { file_count: 0 };
     }
 
-    return { file_count: count || 0 };
+    return { file_count: data?.length || 0 };
   } catch (error) {
     console.error("Error in queryFileCount:", error);
     return { file_count: 0 };

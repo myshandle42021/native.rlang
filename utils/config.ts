@@ -4,7 +4,7 @@ import { db } from "./db";
 export async function get(args: any, context: RLangContext) {
   const key = args.key;
   const clientId = context.clientId || "default";
-  
+
   try {
     const { data, error } = await db
       .from("dynamic_configs")
@@ -18,8 +18,8 @@ export async function get(args: any, context: RLangContext) {
       return { config_value: null };
     }
 
-    return { 
-      config_value: data && data.length > 0 ? data[0].config_value : null 
+    return {
+      config_value: data && data.length > 0 ? data[0].config_value : null,
     };
   } catch (error) {
     console.warn(`Config get exception for ${key}:`, error);
@@ -34,12 +34,12 @@ export async function set(args: any, context: RLangContext) {
   try {
     const { data, error } = await db
       .from("dynamic_configs")
-      .upsert({
+      .insert({
         config_key: key,
         config_value: value,
         client_id: clientId,
         scope: "global",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select();
 
