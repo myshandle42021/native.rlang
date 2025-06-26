@@ -79,19 +79,19 @@ operations:
       }
 
     # Enhanced natural language intent extraction using intent-detector
-     - run: ["r/system/intent-detector.r", "analyze_user_request", {
-         text: "${message_context.text}",
-         context: {
-           conversation_type: "agent_creation_and_system_interaction",
-           user_profile: "${enriched_context.user_profile}",
-           system_context: "ROL3_autonomous_agent_system",
-           available_capabilities: [
-             "agent_creation", "system_monitoring", "api_integration",
-             "data_processing", "workflow_automation", "learning_feedback"
-           ],
-           user_id: "${message_context.user_id}"
-         }
-       }]
+    - run: ["r/system/intent-detector.r", "analyze_user_request", {
+        text: "${message_context.text}",
+        context: {
+          conversation_type: "agent_creation_and_system_interaction",
+          user_profile: "${enriched_context.user_profile}",
+          system_context: "ROL3_autonomous_agent_system",
+          available_capabilities: [
+            "agent_creation", "system_monitoring", "api_integration",
+            "data_processing", "workflow_automation", "learning_feedback"
+          ],
+          user_id: "${message_context.user_id}"
+        }
+      }]
 
     # Validate and enhance intent classification
     - rcd_validate_intent_classification: {
