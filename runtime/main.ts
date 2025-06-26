@@ -75,7 +75,7 @@ async function startROL3() {
 
     // Start webhook server
     console.log("🔗 Starting webhook server...");
-    const webhookModule = await import("../server/webhook-handler.js");
+    const webhookModule = await import("../server/webhook-handler");
     console.log("✅ Webhook server started on port 3001");
 
     // Initialize system with proper bootstrap

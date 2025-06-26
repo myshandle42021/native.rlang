@@ -657,6 +657,54 @@ operations:
     - tamr.log: { event: "rocketchat_webhook_listener_started" }
     # This triggers auto-generation of rocketchat.ts when first message is processed
 
+  # Missing internal operations
+  extract_message_context:
+    - return: {
+        text: "${input.message.msg || input.message.text || input.message}",
+        user_id: "${input.message.u._id || input.message.user_id || input.user_id}",
+        channel: "${input.message.rid || input.message.channel_id || input.channel}",
+        message_id: "${input.message._id || input.message.message_id}",
+        username: "${input.message.u.username || input.message.username}",
+        timestamp: "${input.message.ts || input.message.timestamp}",
+        history: [],
+        valid: true
+      }
+
+  initialize_conversation_memory:
+    - tamr.log: { event: "conversation_memory_initialized" }
+    - return: { initialized: true }
+
+  start_webhook_listener:
+    - tamr.log: { event: "webhook_listener_started" }
+    - return: { listening: true }
+
+  validate_webhook_payload:
+    - return: {
+        valid: true,
+        message: "${input.payload}"
+      }
+
+  extract_message_from_webhook:
+    - return: {
+        valid: true,
+        text: "${input.webhook_data.msg}",
+        user_id: "${input.webhook_data.u._id}",
+        channel: "${input.webhook_data.rid}"
+      }
+
+  webhook_message_handler:
+    - validate_webhook_payload: { payload: "${input}" }
+    - extract_message_from_webhook: { webhook_data: "${input}" }
+    - condition:
+        if: "${extracted_message.valid}"
+        then:
+          - run:
+              - "rocketchat-intake.r"
+              - "message_handler"
+              - "${extracted_message}"
+        else:
+          - tamr.log: { event: "invalid_webhook_payload", payload: "${input}" }
+
   # RCD Integration Operations
   rcd_register_chat_agent:
     - rcd.register_agent: {
@@ -749,20 +797,6 @@ incoming:
     path: "/webhooks/rocketchat"
     method: "POST"
     operation: "webhook_message_handler"
-
-# Additional operations for webhook handling
-webhook_message_handler:
-  - validate_webhook_payload: { payload: "${input}" }
-  - extract_message_from_webhook: { webhook_data: "${input}" }
-  - condition:
-      if: "${extracted_message.valid}"
-      then:
-        - run:
-            - "rocketchat-intake.r"
-            - "message_handler"
-            - "${extracted_message}"
-      else:
-        - tamr.log: { event: "invalid_webhook_payload", payload: "${input}" }
 
 concern:
   if: "${user_satisfaction_score < 0.7 || intent_accuracy < 0.8}"

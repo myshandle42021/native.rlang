@@ -91,9 +91,7 @@ export async function getFunction(
       );
 
       if (rcdResult?.provider) {
-        const providerModule = await import(
-          `../${rcdResult.provider.replace(".ts", ".js")}`
-        );
+        const providerModule = await import(`../${rcdResult.provider.replace}`);
         if (providerModule[functionName]) {
           return providerModule[functionName];
         }

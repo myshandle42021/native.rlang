@@ -110,7 +110,7 @@ async function executeModuleFunction(
     }
 
     // Try to load existing module
-    const moduleFile = await import(`../utils/${module}.js`);
+    const moduleFile = await import(`../utils/${module}`);
     const func = moduleFile[funcName];
 
     if (!func) {
@@ -228,7 +228,7 @@ async function executeModuleFunction(
 
       // Now retry the original call with the generated module
       try {
-        const generatedModule = await import(`../utils/${module}.js`);
+        const generatedModule = await import(`../utils/${module}`);
         const generatedFunc = generatedModule[funcName];
 
         if (!generatedFunc) {
