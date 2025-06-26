@@ -707,6 +707,34 @@ export async function check_intent_confidence(
   }
 }
 
+// Missing function: log_conversation
+export async function log_conversation(args: any, context: RLangContext) {
+  try {
+    const conversationEvent = {
+      agent_id: args.agent_id || context.agentId || "webhook-handler",
+      event_type: "conversation_logged",
+      context_data: {
+        user: args.user || context.user,
+        channel: args.channel || context.input?.channel,
+        message: args.message || args.text,
+        intent: args.intent,
+        confidence: args.confidence,
+        timestamp: new Date().toISOString(),
+      },
+      outcome: "success",
+      impact_score: 0.1,
+    };
+
+    return await storeLearningEvent(conversationEvent, context);
+  } catch (error) {
+    console.error("Error logging conversation:", error);
+    return {
+      logged: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 // ================================
 // CLEAN EXPORT ALIASES - NO CONFLICTS
 // ================================
