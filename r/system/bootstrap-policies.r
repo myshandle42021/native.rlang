@@ -329,11 +329,12 @@ operations:
 
     - loop:
         forEach: "${input.dependency_results.optional_modules}"
+        alias: "opt_modules"
         do:
           - condition:
-              if: "!${item.available}"
+              if: "!${opt_item.available}"
               then:
-                - tamr.log: { event: "optional_module_missing", module: "${item.name}", error: "${item.error}" }
+                - tamr.log: { event: "optional_module_missing", module: "${opt_modules.item.name}", error: "${opt_modules.item.error}" }
 
   # FIXED: Missing internal operation - Evaluate validation results
   evaluate_validation_results:
