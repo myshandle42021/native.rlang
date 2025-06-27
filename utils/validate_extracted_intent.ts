@@ -13,18 +13,49 @@ export async function validateExtractedIntent(
   context: RLangContext,
 ) {
   try {
+    // 🔍 DEBUG LOGGING - Add this at the beginning
+    console.log(
+      "🔍 DEBUG - Raw validation args:",
+      JSON.stringify(args, null, 2),
+    );
+    console.log(
+      "🔍 DEBUG - Context input:",
+      JSON.stringify(context.input, null, 2),
+    );
+    console.log(
+      "🔍 DEBUG - Context memory:",
+      JSON.stringify(context.memory, null, 2),
+    );
+
     const extracted = args.extracted || args;
+    console.log("🔍 DEBUG - Extracted data type:", typeof extracted);
+    console.log(
+      "🔍 DEBUG - Extracted data:",
+      JSON.stringify(extracted, null, 2),
+    );
 
     // Parse if it's a string (YAML/JSON response from LLM)
     let intentData = extracted;
     if (typeof extracted === "string") {
+      console.log("🔍 DEBUG - Extracted is string, attempting to parse...");
       try {
         // Try JSON first
         intentData = JSON.parse(extracted);
+        console.log(
+          "🔍 DEBUG - Successfully parsed as JSON:",
+          JSON.stringify(intentData, null, 2),
+        );
       } catch {
+        console.log("🔍 DEBUG - JSON parse failed, trying YAML...");
         // If JSON fails, try basic YAML parsing
         intentData = parseBasicYaml(extracted);
+        console.log(
+          "🔍 DEBUG - YAML parsed result:",
+          JSON.stringify(intentData, null, 2),
+        );
       }
+    } else {
+      console.log("🔍 DEBUG - Extracted is not string, using as-is");
     }
 
     // Required fields for agent creation
@@ -33,6 +64,8 @@ export async function validateExtractedIntent(
       "agent_requirements.primary_purpose",
       "system_integrations.required_services",
     ];
+
+    console.log("🔍 DEBUG - Required fields:", requiredFields);
 
     const validation = {
       incomplete_fields: [] as string[],
@@ -43,28 +76,55 @@ export async function validateExtractedIntent(
 
     // Check for required fields
     for (const field of requiredFields) {
-      if (!getNestedValue(intentData, field)) {
+      const fieldValue = getNestedValue(intentData, field);
+      console.log(`🔍 DEBUG - Checking field "${field}":`, fieldValue);
+      if (!fieldValue) {
         validation.incomplete_fields.push(field);
+        console.log(`❌ DEBUG - Missing field: ${field}`);
+      } else {
+        console.log(
+          `✅ DEBUG - Found field: ${field} = ${JSON.stringify(fieldValue)}`,
+        );
       }
     }
+
+    console.log("🔍 DEBUG - Incomplete fields:", validation.incomplete_fields);
 
     // Calculate completeness score
     const totalFields = requiredFields.length;
     const completeFields = totalFields - validation.incomplete_fields.length;
     validation.completeness_score = completeFields / totalFields;
 
+    console.log(`🔍 DEBUG - Complete fields: ${completeFields}/${totalFields}`);
+    console.log(
+      `🔍 DEBUG - Completeness score: ${validation.completeness_score}`,
+    );
+
     // Enhance with defaults if missing
     if (validation.incomplete_fields.length > 0) {
+      console.log("🔍 DEBUG - Enhancing with defaults...");
       validation.validated_intent = enhanceWithDefaults(intentData, args);
+      console.log(
+        "🔍 DEBUG - Enhanced intent:",
+        JSON.stringify(validation.validated_intent, null, 2),
+      );
     }
 
     console.log(
       `✅ Intent validation: ${validation.completeness_score * 100}% complete`,
     );
+    console.log(
+      "🔍 DEBUG - Final validation result:",
+      JSON.stringify(validation, null, 2),
+    );
 
     return validation;
   } catch (error) {
-    console.error("Intent validation failed:", error);
+    console.error("❌ DEBUG - Intent validation error:", error);
+    console.error(
+      "❌ DEBUG - Error stack:",
+      error instanceof Error ? error.stack : "No stack trace",
+    );
     return {
       incomplete_fields: ["validation_error"],
       completeness_score: 0,

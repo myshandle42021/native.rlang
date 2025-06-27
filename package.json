@@ -16,7 +16,9 @@
     "db:clean": "node -e \"import('./utils/db.js').then(m => m.dbUtils.cleanup())\"",
     "debug": "tsx cli/debug-system.ts",
     "debug:health": "tsx cli/debug-system.ts health",
-    "debug:test": "tsx scripts/test-debug-system.ts"
+    "debug:test": "tsx scripts/test-debug-system.ts",
+    "webhook-server": "tsx server/webhook-handler.ts",
+    "webhook-server:dev": "tsx watch server/webhook-handler.ts"
   },
   "dependencies": {
     "@fastify/cors": "^8.4.0",
