@@ -4,7 +4,7 @@
 // Try to import Claude API, fallback if not available
 let callClaude: (prompt: string) => Promise<string>;
 try {
-  const claudeApi = require("./claude-api");
+  const claudeApi = require("./claude-debug-api");
   callClaude = claudeApi.callClaude;
 } catch (error) {
   console.warn("Claude API not available - using fallback responses");
