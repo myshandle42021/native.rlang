@@ -332,7 +332,7 @@ operations:
         alias: "opt_modules"
         do:
           - condition:
-              if: "!${opt_item.available}"
+              if: "!${opt_modules.item.available}"
               then:
                 - tamr.log: { event: "optional_module_missing", module: "${opt_modules.item.name}", error: "${opt_modules.item.error}" }
 
