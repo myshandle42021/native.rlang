@@ -1,17 +1,7 @@
 // utils/claude-debug.ts
 // Claude integration layer for AI-powered system analysis and fix generation
 
-// Try to import Claude API, fallback if not available
-let callClaude: (prompt: string) => Promise<string>;
-try {
-  const claudeApi = require("./claude-debug-api");
-  callClaude = claudeApi.callClaude;
-} catch (error) {
-  console.warn("Claude API not available - using fallback responses");
-  callClaude = async (prompt: string) => {
-    throw new Error("Claude API not configured");
-  };
-}
+import { callClaude } from "./claude-debug-api";
 import { ErrorPattern, SystemMetrics, FailurePattern } from "./debug-queries";
 
 export interface Analysis {
