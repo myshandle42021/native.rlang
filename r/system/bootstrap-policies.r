@@ -205,14 +205,16 @@ operations:
   validate_file_permissions:
     - loop:
         forEach: "${input.permission_results}"
+        alias: "outer"
         do:
           - loop:
-              forEach: "${item.operations}"
+              forEach: "${outer.item.operations}"
+              alias: "inner"
               do:
                 - condition:
-                    if: "!${operation.accessible}"
+                    if: "!${inner.operation.accessible}"
                     then:
-                      - add_validation_error: { error: "Cannot access ${item.path} for ${operation.operation}: ${operation.error}" }
+                      - add_validation_error: { error: "Cannot access ${outer.item.path} for ${inner.operation.operation}: ${inner.operation.error}" }
 
   # FIXED: Missing internal operation - Check memory availability
   check_memory_availability:
@@ -318,11 +320,12 @@ operations:
   validate_dependencies:
     - loop:
         forEach: "${input.dependency_results.critical_modules}"
+        alias: "modules"
         do:
           - condition:
-              if: "!${item.available}"
+              if: "!${modules.item.available}"
               then:
-                - add_validation_error: { error: "Critical module missing: ${item.name} - ${item.error}" }
+                - add_validation_error: { error: "Critical module missing: ${modules.item.name} - ${modules.item.error}" }
 
     - loop:
         forEach: "${input.dependency_results.optional_modules}"
