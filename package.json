@@ -14,9 +14,13 @@
     "health": "tsx -e \"import('./runtime/interpreter.js').then(m => m.runSystemOperation('diagnose'))\"",
     "db:setup": "node -e \"import('./utils/db.js').then(m => m.dbUtils.migrate())\"",
     "db:clean": "node -e \"import('./utils/db.js').then(m => m.dbUtils.cleanup())\"",
+<<<<<<< HEAD
     "debug": "tsx cli/debug-system.ts",
     "debug:health": "tsx cli/debug-system.ts health",
     "debug:test": "tsx scripts/test-debug-system.ts"
+=======
+    "debug": "tsx cli/debug-system.ts"
+>>>>>>> 12d879b7d11d6cd8b0a7db27a0f45c74c64ec2ba
   },
   "dependencies": {
     "@fastify/cors": "^8.4.0",
