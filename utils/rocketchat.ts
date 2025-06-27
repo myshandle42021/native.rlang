@@ -181,7 +181,8 @@ export async function uploadFile(args: any, context: RLangContext) {
   }
 
   try {
-    const config = await getServiceConfig(context);
+    const serviceModule = await import("../templates/service-template");
+    const config = await serviceModule.getServiceConfig(context);
     const auth = await authenticate({}, context);
 
     const response = await fetch(
@@ -432,33 +433,6 @@ function formatMessage(message: any): any {
     starred: message.starred,
     pinned: message.pinned,
   };
-}
-
-// Get service configuration (used by service template)
-async function getServiceConfig(context: RLangContext) {
-  // This follows the service template pattern
-  const { db } = await import("../utils/db");
-
-  try {
-    const { data } = await db
-      .from("api_connections")
-      .select("*")
-      .eq("service", "rocketchat")
-      .eq("client_id", context.clientId || "default")
-      .limit(1);
-
-    if (data && data.length > 0) {
-      return data[0];
-    }
-  } catch (error) {
-    console.warn(
-      "Failed to get RocketChat config from database:",
-      getErrorMessage(error),
-    );
-  }
-
-  // Return default configuration
-  return SERVICE_CONFIG;
 }
 
 // Dynamic aliases from service configuration
