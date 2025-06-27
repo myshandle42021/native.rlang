@@ -1,0 +1,100 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║                    🛠️  ROL3 AUTO-DEBUG REPORT                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚨 System Health: CRITICAL (40/100)
+📊 Success Rate: 100.0%
+📈 Total Events: 16183
+⚠️  Error Rate: 65.5%
+⏱️  Analysis Time: 49281ms
+
+🚨 ERROR PATTERNS DETECTED:
+──────────────────────────────────────────────────
+1. 🔴 validation_error_added
+   Frequency: 9406 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 2:29:35 PM
+
+2. 🔴 optional_module_missing
+   Frequency: 792 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 2:29:37 PM
+
+3. 🔴 validation_error_added
+   Frequency: 660 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 2:29:36 PM
+
+4. 🔴 validation_error_added
+   Frequency: 468 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:11:29 PM
+
+5. 🔴 optional_module_missing
+   Frequency: 88 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:25 PM
+
+6. 🔴 validation_error_added
+   Frequency: 44 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:11:30 PM
+
+7. 🔴 database_unhealthy
+   Frequency: 21 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 2:29:22 PM
+
+8. 🔴 validation_error_added
+   Frequency: 17 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 2:29:22 PM
+
+🔍 FAILURE PATTERNS:
+──────────────────────────────────────────────────
+1. Massive validation error spike: 18290 errors in 48h
+   Occurrences: 18290 | Impact: 0.95
+   Suggested Fix: Review bootstrap policies and validation rules - this is critical
+
+2. Database health check failures detected
+   Occurrences: 21 | Impact: 0.9
+   Suggested Fix: Check database connection pool and query performance
+
+3. Error clustering in 1 agents
+   Occurrences: 10595 | Impact: 0.7
+   Suggested Fix: Review agent configurations and error handling
+
+4. Multiple optional modules missing
+   Occurrences: 880 | Impact: 0.6
+   Suggested Fix: Check module dependencies and configuration files
+
+🤖 AI ANALYSIS:
+──────────────────────────────────────────────────
+Detected 8 error patterns, 8 critical
+
+Root Causes:
+  • Multiple system errors detected (70% confidence)
+
+🔧 GENERATED FIXES:
+──────────────────────────────────────────────────
+1. 🔴 Intent Validation Enhancement
+   File: r/system/intent-detector.r
+   Type: code_change | Priority: 1
+   Confidence: [██████░░░░] 60.0%
+
+💡 RECOMMENDATIONS:
+──────────────────────────────────────────────────
+1. Review error logs and fix highest frequency issues
+2. Investigate and resolve the validation errors related to accessing paths and missing critical modules
+3. Check and fix the issues with the database that is causing it to be unhealthy
+4. Review the optional modules that are missing and determine if they are required for proper system operation
+5. Implement better error handling and logging mechanisms to better diagnose and resolve issues
+
+🚀 NEXT STEPS:
+──────────────────────────────────────────────────
+📋 Review all fixes: cat generated-fixes/README.md
+🔧 Apply specific fix: npm run debug -- --apply-fix <fix_id>
+
+──────────────────────────────────────────────────────────────────
+Report generated: 6/27/2025, 2:33:35 PM

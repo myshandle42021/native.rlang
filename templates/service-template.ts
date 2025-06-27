@@ -277,7 +277,7 @@ export async function makeRequest(
   // Build full URL
   const baseUrl = config.base_url;
   const endpointPath = config.endpoints[endpoint] || endpoint;
-  const fullUrl = `${baseUrl}${endpointPath}`;
+  const fullUrl = endpointPath.startsWith("/") ? `${baseUrl}${endpointPath}` : `${baseUrl}/${endpointPath}`;
 
   // Build headers
   const headers = {

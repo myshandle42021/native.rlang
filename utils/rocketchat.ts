@@ -7,6 +7,24 @@ import {
 } from "../templates/service-template";
 import { RLangContext } from "../schema/types";
 
+async function getRocketChatAuth(context: RLangContext) {
+  const serviceModule = await import("../templates/service-template");
+  const userCredentials = await serviceModule.getUserCredentials("rocketchat", context);
+  
+  if (!userCredentials) {
+    throw new Error("RocketChat credentials not configured");
+  }
+  
+  const creds = userCredentials.credentials;
+  
+  // RocketChat uses X-Auth-Token and X-User-Id headers instead of Authorization
+  return {
+    "X-Auth-Token": creds.token,
+    "X-User-Id": creds.user_id,
+    "Content-Type": "application/json"
+  };
+}
+
 // Production-ready error type guard (TypeScript best practice)
 function isError(error: unknown): error is Error {
   return error instanceof Error;
@@ -59,16 +77,22 @@ const SERVICE_CONFIG = {
 export async function authenticate(args: any, context: RLangContext) {
   context.memory.current_service = "rocketchat";
   const serviceModule = await import("../templates/service-template");
-  return serviceModule.authenticate(args, context);
+  return await getRocketChatAuth (context);
 }
 
 // Enhanced sendMessage with RocketChat-specific formatting
 export async function sendMessage(args: any, context: RLangContext) {
+  console.log("🚨 RocketChat sendMessage called!");
+  console.log("📋 Full args:", JSON.stringify(args, null, 2));
+  console.log("🎯 Context:", JSON.stringify(context, null, 2));
+ 
   context.memory.current_service = "rocketchat";
 
   // Transform parameters to RocketChat format
-  const rocketChatParams: Record<string, any> = {
-    roomId: args.channel || args.to || args.roomId,
+ const targetChannel = args.channel || args.to || args.roomId;
+ const finalRoomId = targetChannel === "system" ? "GENERAL" : (targetChannel || "GENERAL"); 
+ const rocketChatParams: Record<string, any> = {
+    roomId: finalRoomId ,
     text: args.text || args.message,
     attachments: formatAttachments(args.attachments),
     tmid: args.thread || args.reply_to,
@@ -85,14 +109,22 @@ export async function sendMessage(args: any, context: RLangContext) {
   });
 
   try {
+    // Use direct fetch with RocketChat auth instead of service-template
     const serviceModule = await import("../templates/service-template");
-    const result = (await serviceModule.makeRequest(
-      "POST",
-      "send_message",
-      rocketChatParams,
-      context,
-    )) as any;
+    const config = await serviceModule.getServiceConfig(context);
+    const auth = await getRocketChatAuth(context);
 
+    const response = await fetch(`${config.base_url}/api/v1/chat.postMessage`, {
+      method: 'POST',
+      headers: auth,
+      body: JSON.stringify(rocketChatParams)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+
+    const result = await response.json();
     return {
       success: result.success,
       message_id: result.message?._id,

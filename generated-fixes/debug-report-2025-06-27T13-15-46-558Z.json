@@ -1,0 +1,496 @@
+{
+  "timestamp": "2025-06-27T13:15:46.558Z",
+  "system_health": {
+    "overall_score": 40,
+    "status": "critical",
+    "key_metrics": {
+      "total_events": 2694,
+      "success_rate": 1,
+      "avg_response_time": 0,
+      "error_frequency": 0.6870824053452116,
+      "agent_performance": [
+        {
+          "agent_id": "bootstrap-policies",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 1851
+        },
+        {
+          "agent_id": "rcd-bootstrap-check",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "rcd-core",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "system-doctor",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        }
+      ],
+      "top_errors": [
+        {
+          "id": "error_0_1751030094883",
+          "error_type": "validation_error_added",
+          "frequency": 1248,
+          "first_seen": "2025-06-27T12:59:11.281Z",
+          "last_seen": "2025-06-27T13:12:49.569Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Cannot access ${outer.item.path} for ${inner.operation.operation}: ${inner.operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Cannot access ${outer.item.path} for ${inner.operation.operation}: ${inner.operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_1_1751030094883",
+          "error_type": "validation_error_added",
+          "frequency": 468,
+          "first_seen": "2025-06-27T12:11:20.076Z",
+          "last_seen": "2025-06-27T12:11:29.342Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_2_1751030094883",
+          "error_type": "validation_error_added",
+          "frequency": 88,
+          "first_seen": "2025-06-27T12:59:23.489Z",
+          "last_seen": "2025-06-27T13:12:50.586Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Critical module missing: ${modules.item.name} - ${modules.item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Critical module missing: ${modules.item.name} - ${modules.item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_3_1751030094883",
+          "error_type": "optional_module_missing",
+          "frequency": 88,
+          "first_seen": "2025-06-27T12:11:30.342Z",
+          "last_seen": "2025-06-27T12:59:25.171Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "context_patterns": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_4_1751030094883",
+          "error_type": "optional_module_missing",
+          "frequency": 44,
+          "first_seen": "2025-06-27T13:12:50.604Z",
+          "last_seen": "2025-06-27T13:12:51.447Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${opt_modules.item.error}",
+            "event": "optional_module_missing",
+            "module": "${opt_modules.item.name}"
+          },
+          "context_patterns": {
+            "error": "${opt_modules.item.error}",
+            "event": "optional_module_missing",
+            "module": "${opt_modules.item.name}"
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_5_1751030094883",
+          "error_type": "validation_error_added",
+          "frequency": 44,
+          "first_seen": "2025-06-27T12:11:29.470Z",
+          "last_seen": "2025-06-27T12:11:30.324Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_6_1751030094883",
+          "error_type": "validation_error_added",
+          "frequency": 3,
+          "first_seen": "2025-06-27T12:11:20.035Z",
+          "last_seen": "2025-06-27T13:12:37.584Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "warning"
+        },
+        {
+          "id": "error_7_1751030094883",
+          "error_type": "database_unhealthy",
+          "frequency": 3,
+          "first_seen": "2025-06-27T12:11:20.017Z",
+          "last_seen": "2025-06-27T13:12:37.563Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "context_patterns": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "errors_found": [
+    {
+      "id": "error_0_1751030094871",
+      "error_type": "validation_error_added",
+      "frequency": 1248,
+      "first_seen": "2025-06-27T12:59:11.281Z",
+      "last_seen": "2025-06-27T13:12:49.569Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Cannot access ${outer.item.path} for ${inner.operation.operation}: ${inner.operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Cannot access ${outer.item.path} for ${inner.operation.operation}: ${inner.operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_1_1751030094871",
+      "error_type": "validation_error_added",
+      "frequency": 468,
+      "first_seen": "2025-06-27T12:11:20.076Z",
+      "last_seen": "2025-06-27T12:11:29.342Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_2_1751030094871",
+      "error_type": "validation_error_added",
+      "frequency": 88,
+      "first_seen": "2025-06-27T12:59:23.489Z",
+      "last_seen": "2025-06-27T13:12:50.586Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Critical module missing: ${modules.item.name} - ${modules.item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Critical module missing: ${modules.item.name} - ${modules.item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_3_1751030094871",
+      "error_type": "optional_module_missing",
+      "frequency": 88,
+      "first_seen": "2025-06-27T12:11:30.342Z",
+      "last_seen": "2025-06-27T12:59:25.171Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "context_patterns": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_4_1751030094871",
+      "error_type": "optional_module_missing",
+      "frequency": 44,
+      "first_seen": "2025-06-27T13:12:50.604Z",
+      "last_seen": "2025-06-27T13:12:51.447Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${opt_modules.item.error}",
+        "event": "optional_module_missing",
+        "module": "${opt_modules.item.name}"
+      },
+      "context_patterns": {
+        "error": "${opt_modules.item.error}",
+        "event": "optional_module_missing",
+        "module": "${opt_modules.item.name}"
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_5_1751030094871",
+      "error_type": "validation_error_added",
+      "frequency": 44,
+      "first_seen": "2025-06-27T12:11:29.470Z",
+      "last_seen": "2025-06-27T12:11:30.324Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_6_1751030094871",
+      "error_type": "validation_error_added",
+      "frequency": 3,
+      "first_seen": "2025-06-27T12:11:20.035Z",
+      "last_seen": "2025-06-27T13:12:37.584Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "warning"
+    },
+    {
+      "id": "error_7_1751030094871",
+      "error_type": "database_unhealthy",
+      "frequency": 3,
+      "first_seen": "2025-06-27T12:11:20.017Z",
+      "last_seen": "2025-06-27T13:12:37.563Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "context_patterns": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "severity": "critical"
+    }
+  ],
+  "failure_patterns": [
+    {
+      "pattern_type": "validation_error_spike",
+      "description": "Massive validation error spike: 9546 errors in 48h",
+      "occurrences": 9546,
+      "impact_score": 0.95,
+      "suggested_fix": "Review bootstrap policies and validation rules - this is critical",
+      "confidence": 0.98
+    },
+    {
+      "pattern_type": "database_health_degradation",
+      "description": "Database health check failures detected",
+      "occurrences": 3,
+      "impact_score": 0.9,
+      "suggested_fix": "Check database connection pool and query performance",
+      "confidence": 0.95
+    },
+    {
+      "pattern_type": "agent_error_clustering",
+      "description": "Error clustering in 1 agents",
+      "occurrences": 1851,
+      "impact_score": 0.7,
+      "suggested_fix": "Review agent configurations and error handling",
+      "confidence": 0.85
+    },
+    {
+      "pattern_type": "missing_module_configuration",
+      "description": "Multiple optional modules missing",
+      "occurrences": 132,
+      "impact_score": 0.6,
+      "suggested_fix": "Check module dependencies and configuration files",
+      "confidence": 0.9
+    }
+  ],
+  "ai_analysis": {
+    "summary": "Detected 8 error patterns, 7 critical",
+    "root_causes": [
+      {
+        "cause": "Multiple system errors detected",
+        "confidence": 0.7,
+        "evidence": [
+          "8 error patterns found"
+        ]
+      }
+    ],
+    "impact_assessment": {
+      "severity": "critical",
+      "affected_components": [
+        "bootstrap-policies"
+      ],
+      "user_impact": "System functionality may be degraded"
+    },
+    "recommended_actions": [
+      {
+        "action": "Review error logs and fix highest frequency issues",
+        "priority": 1,
+        "effort": "medium",
+        "risk": "low"
+      }
+    ],
+    "patterns_identified": [
+      "validation_error_added",
+      "optional_module_missing",
+      "database_unhealthy"
+    ]
+  },
+  "generated_fixes": [
+    {
+      "id": "intent_fix_1",
+      "title": "Intent Validation Enhancement",
+      "description": "Improve intent validation logic",
+      "file_path": "r/system/intent-detector.r",
+      "fix_type": "code_change",
+      "content": "# Review intent validation rules and confidence thresholds",
+      "validation_steps": [
+        "Test intent detection",
+        "Check validation accuracy"
+      ],
+      "rollback_instructions": "Revert to previous intent detection logic",
+      "confidence": 0.6,
+      "priority": 1
+    }
+  ],
+  "priority_order": [
+    {
+      "issue": "Critical module missing and cannot access paths for bootstrap-policies agent",
+      "priority_score": 95,
+      "reasoning": "These errors are critical and affect the core functionality of the system. They have a high frequency and impact system stability, making them the top priority.",
+      "urgency": "immediate",
+      "estimated_fix_time": "2-4 hours"
+    },
+    {
+      "issue": "Database unhealthy for bootstrap-policies agent",
+      "priority_score": 90,
+      "reasoning": "A database issue can potentially impact the entire system and its data integrity. While less frequent, it's a critical issue that needs to be addressed urgently.",
+      "urgency": "urgent",
+      "estimated_fix_time": "1-2 hours"
+    },
+    {
+      "issue": "Optional module missing for bootstrap-policies agent",
+      "priority_score": 80,
+      "reasoning": "While not as critical as missing core modules, missing optional modules can still impact functionality and user experience. The high frequency makes it a priority.",
+      "urgency": "urgent",
+      "estimated_fix_time": "1-2 hours"
+    },
+    {
+      "issue": "Validation error added for bootstrap-policies agent",
+      "priority_score": 70,
+      "reasoning": "Validation errors can indicate potential issues, but their impact may be less severe than missing modules or database issues. The low frequency suggests it's not an immediate concern.",
+      "urgency": "normal",
+      "estimated_fix_time": "2-4 hours"
+    }
+  ],
+  "recommendations": [
+    "Review error logs and fix highest frequency issues",
+    "Investigate and resolve the validation errors related to accessing item paths and missing critical modules",
+    "Check the database health and address any issues causing it to be unhealthy",
+    "Review the error logs for the 'bootstrap-policies' agent, which seems to be the primary source of errors",
+    "Consider increasing system resources or optimizing the agents to reduce the high error rate"
+  ],
+  "execution_time_ms": 51724
+}

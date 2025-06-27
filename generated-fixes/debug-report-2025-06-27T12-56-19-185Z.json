@@ -1,0 +1,416 @@
+{
+  "timestamp": "2025-06-27T12:56:19.185Z",
+  "system_health": {
+    "overall_score": 40,
+    "status": "degraded",
+    "key_metrics": {
+      "total_events": 794,
+      "success_rate": 1,
+      "avg_response_time": 0,
+      "error_frequency": 0.646095717884131,
+      "agent_performance": [
+        {
+          "agent_id": "bootstrap-policies",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 513
+        },
+        {
+          "agent_id": "rcd-bootstrap-check",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "rcd-core",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "system-doctor",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        }
+      ],
+      "top_errors": [
+        {
+          "id": "error_0_1751028921226",
+          "error_type": "validation_error_added",
+          "frequency": 468,
+          "first_seen": "2025-06-27T12:11:20.076Z",
+          "last_seen": "2025-06-27T12:11:29.342Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_1_1751028921226",
+          "error_type": "optional_module_missing",
+          "frequency": 44,
+          "first_seen": "2025-06-27T12:11:30.342Z",
+          "last_seen": "2025-06-27T12:11:31.249Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "context_patterns": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_2_1751028921226",
+          "error_type": "validation_error_added",
+          "frequency": 44,
+          "first_seen": "2025-06-27T12:11:29.470Z",
+          "last_seen": "2025-06-27T12:11:30.324Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_3_1751028921226",
+          "error_type": "validation_error_added",
+          "frequency": 1,
+          "first_seen": "2025-06-27T12:11:20.035Z",
+          "last_seen": "2025-06-27T12:11:20.035Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "warning"
+        },
+        {
+          "id": "error_4_1751028921226",
+          "error_type": "database_unhealthy",
+          "frequency": 1,
+          "first_seen": "2025-06-27T12:11:20.017Z",
+          "last_seen": "2025-06-27T12:11:20.017Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "context_patterns": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "errors_found": [
+    {
+      "id": "error_0_1751028921213",
+      "error_type": "validation_error_added",
+      "frequency": 468,
+      "first_seen": "2025-06-27T12:11:20.076Z",
+      "last_seen": "2025-06-27T12:11:29.342Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_1_1751028921213",
+      "error_type": "optional_module_missing",
+      "frequency": 44,
+      "first_seen": "2025-06-27T12:11:30.342Z",
+      "last_seen": "2025-06-27T12:11:31.249Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "context_patterns": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_2_1751028921213",
+      "error_type": "validation_error_added",
+      "frequency": 44,
+      "first_seen": "2025-06-27T12:11:29.470Z",
+      "last_seen": "2025-06-27T12:11:30.324Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_3_1751028921213",
+      "error_type": "validation_error_added",
+      "frequency": 1,
+      "first_seen": "2025-06-27T12:11:20.035Z",
+      "last_seen": "2025-06-27T12:11:20.035Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "warning"
+    },
+    {
+      "id": "error_4_1751028921213",
+      "error_type": "database_unhealthy",
+      "frequency": 1,
+      "first_seen": "2025-06-27T12:11:20.017Z",
+      "last_seen": "2025-06-27T12:11:20.017Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "context_patterns": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "severity": "critical"
+    }
+  ],
+  "failure_patterns": [
+    {
+      "pattern_type": "validation_error_spike",
+      "description": "Massive validation error spike: 8208 errors in 48h",
+      "occurrences": 8208,
+      "impact_score": 0.95,
+      "suggested_fix": "Review bootstrap policies and validation rules - this is critical",
+      "confidence": 0.98
+    },
+    {
+      "pattern_type": "agent_error_clustering",
+      "description": "Error clustering in 1 agents",
+      "occurrences": 513,
+      "impact_score": 0.7,
+      "suggested_fix": "Review agent configurations and error handling",
+      "confidence": 0.85
+    },
+    {
+      "pattern_type": "missing_module_configuration",
+      "description": "Multiple optional modules missing",
+      "occurrences": 44,
+      "impact_score": 0.6,
+      "suggested_fix": "Check module dependencies and configuration files",
+      "confidence": 0.9
+    }
+  ],
+  "ai_analysis": {
+    "summary": "The error data indicates critical issues with intent validation, missing modules, and potential database connectivity problems in the ROL3 system. These issues are affecting the 'bootstrap-policies' agent and could lead to system degradation or failures.",
+    "root_causes": [
+      {
+        "cause": "Intent validation errors",
+        "confidence": 0.9,
+        "evidence": [
+          "Multiple 'validation_error_added' errors with high frequency",
+          "Errors related to accessing item paths and missing critical modules"
+        ]
+      },
+      {
+        "cause": "Missing or faulty optional modules",
+        "confidence": 0.8,
+        "evidence": [
+          "'optional_module_missing' error type",
+          "Errors mentioning missing modules and associated errors"
+        ]
+      },
+      {
+        "cause": "Potential database connectivity issues",
+        "confidence": 0.6,
+        "evidence": [
+          "'database_unhealthy' error type",
+          "Error mentioning database health result error"
+        ]
+      }
+    ],
+    "impact_assessment": {
+      "severity": "critical",
+      "affected_components": [
+        "bootstrap-policies agent",
+        "Intent validation system",
+        "Module loading system",
+        "Database connectivity"
+      ],
+      "user_impact": "Users may experience failures in executing operations, processing messages, and interacting with the system through RocketChat webhooks."
+    },
+    "recommended_actions": [
+      {
+        "action": "Investigate and fix intent validation errors",
+        "priority": 1,
+        "effort": "high",
+        "risk": "medium"
+      },
+      {
+        "action": "Verify and resolve missing or faulty optional modules",
+        "priority": 2,
+        "effort": "medium",
+        "risk": "low"
+      },
+      {
+        "action": "Check and ensure database connectivity and health",
+        "priority": 3,
+        "effort": "medium",
+        "risk": "low"
+      },
+      {
+        "action": "Monitor agent performance and error rates",
+        "priority": 4,
+        "effort": "low",
+        "risk": "low"
+      },
+      {
+        "action": "Verify RocketChat webhook integration and user interactions",
+        "priority": 5,
+        "effort": "medium",
+        "risk": "low"
+      }
+    ],
+    "patterns_identified": [
+      "High frequency of 'validation_error_added' errors",
+      "Errors related to missing or faulty modules",
+      "Potential database connectivity issues"
+    ]
+  },
+  "generated_fixes": [
+    {
+      "id": "intent_fix_1",
+      "title": "Intent Validation Enhancement",
+      "description": "Improve intent validation logic",
+      "file_path": "r/system/intent-detector.r",
+      "fix_type": "code_change",
+      "content": "# Review intent validation rules and confidence thresholds",
+      "validation_steps": [
+        "Test intent detection",
+        "Check validation accuracy"
+      ],
+      "rollback_instructions": "Revert to previous intent detection logic",
+      "confidence": 0.6,
+      "priority": 1
+    }
+  ],
+  "priority_order": [
+    {
+      "issue": "error_4_1751028921213 - Database unhealthy",
+      "priority_score": 95,
+      "reasoning": "This issue has a critical severity, affects system stability, and has a high business criticality as it impacts the core database functionality.",
+      "urgency": "immediate",
+      "estimated_fix_time": "1 hour"
+    },
+    {
+      "issue": "error_0_1751028921213 - Validation error related to accessing files/paths",
+      "priority_score": 90,
+      "reasoning": "This issue has a critical severity, high frequency, and affects system stability by preventing access to certain files or paths.",
+      "urgency": "urgent",
+      "estimated_fix_time": "2 hours"
+    },
+    {
+      "issue": "error_2_1751028921213 - Critical module missing validation error",
+      "priority_score": 85,
+      "reasoning": "This issue has a critical severity, moderate frequency, and affects system stability by indicating a critical module is missing.",
+      "urgency": "urgent",
+      "estimated_fix_time": "3 hours"
+    },
+    {
+      "issue": "error_1_1751028921213 - Optional module missing",
+      "priority_score": 70,
+      "reasoning": "This issue has a critical severity but lower frequency, and affects system functionality by indicating an optional module is missing.",
+      "urgency": "normal",
+      "estimated_fix_time": "4 hours"
+    },
+    {
+      "issue": "error_3_1751028921213 - Database unhealthy validation error",
+      "priority_score": 60,
+      "reasoning": "This issue has a warning severity, low frequency, and is related to the database health, which is already covered by the critical database unhealthy issue.",
+      "urgency": "low",
+      "estimated_fix_time": "1 day"
+    }
+  ],
+  "recommendations": [
+    "Investigate and fix intent validation errors",
+    "Verify and resolve missing or faulty optional modules",
+    "Check and ensure database connectivity and health",
+    "Monitor agent performance and error rates",
+    "Verify RocketChat webhook integration and user interactions",
+    "Investigate and resolve the validation errors and missing module issues",
+    "Monitor the system closely and address any new critical errors promptly",
+    "Consider increasing system resources or optimizing performance to reduce error frequency"
+  ],
+  "execution_time_ms": 58005
+}

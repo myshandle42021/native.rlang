@@ -1,0 +1,100 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║                    🛠️  ROL3 AUTO-DEBUG REPORT                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚨 System Health: CRITICAL (40/100)
+📊 Success Rate: 100.0%
+📈 Total Events: 1744
+⚠️  Error Rate: 67.8%
+⏱️  Analysis Time: 49397ms
+
+🚨 ERROR PATTERNS DETECTED:
+──────────────────────────────────────────────────
+1. 🔴 validation_error_added
+   Frequency: 624 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:23 PM
+
+2. 🔴 validation_error_added
+   Frequency: 468 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:11:29 PM
+
+3. 🔴 optional_module_missing
+   Frequency: 88 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:25 PM
+
+4. 🔴 validation_error_added
+   Frequency: 44 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:24 PM
+
+5. 🔴 validation_error_added
+   Frequency: 44 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:11:30 PM
+
+6. 🟡 validation_error_added
+   Frequency: 2 | Severity: warning
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:11 PM
+
+7. 🔴 database_unhealthy
+   Frequency: 2 | Severity: critical
+   Affected: bootstrap-policies
+   Last seen: 6/27/2025, 12:59:11 PM
+
+🔍 FAILURE PATTERNS:
+──────────────────────────────────────────────────
+1. Massive validation error spike: 8877 errors in 48h
+   Occurrences: 8877 | Impact: 0.95
+   Suggested Fix: Review bootstrap policies and validation rules - this is critical
+
+2. Database health check failures detected
+   Occurrences: 2 | Impact: 0.9
+   Suggested Fix: Check database connection pool and query performance
+
+3. Error clustering in 1 agents
+   Occurrences: 1182 | Impact: 0.7
+   Suggested Fix: Review agent configurations and error handling
+
+4. Multiple optional modules missing
+   Occurrences: 88 | Impact: 0.6
+   Suggested Fix: Check module dependencies and configuration files
+
+🤖 AI ANALYSIS:
+──────────────────────────────────────────────────
+The error data indicates critical issues with the ROL3 system, primarily related to intent validation failures, database connectivity problems, and missing or unhealthy modules. These errors are affecting the 'bootstrap-policies' agent and are likely causing performance degradation and failures in processing user interactions and executing operations.
+
+Root Causes:
+  • Intent validation errors (90% confidence)
+  • Database connectivity issues (80% confidence)
+  • Missing or unhealthy critical modules (70% confidence)
+
+🔧 GENERATED FIXES:
+──────────────────────────────────────────────────
+1. 🔴 Intent Validation Enhancement
+   File: r/system/intent-detector.r
+   Type: code_change | Priority: 1
+   Confidence: [██████░░░░] 60.0%
+
+💡 RECOMMENDATIONS:
+──────────────────────────────────────────────────
+1. Investigate and fix intent validation errors
+2. Check and resolve database connectivity issues
+3. Identify and install missing critical modules
+4. Monitor agent performance and error rates
+5. Test RocketChat integration and webhook processing
+6. Investigate and resolve the missing module errors and validation failures
+7. Check and fix the database health issues
+8. Improve error handling and logging mechanisms to reduce error frequency
+
+🚀 NEXT STEPS:
+──────────────────────────────────────────────────
+📋 Review all fixes: cat generated-fixes/README.md
+🔧 Apply specific fix: npm run debug -- --apply-fix <fix_id>
+
+──────────────────────────────────────────────────────────────────
+Report generated: 6/27/2025, 1:01:58 PM

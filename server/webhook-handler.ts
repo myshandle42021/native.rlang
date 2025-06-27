@@ -251,7 +251,7 @@ function extractMessageData(rawMessage: any): any {
 
 // Start webhook server
 const PORT = process.env.WEBHOOK_PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
   console.log(`🔗 RocketChat webhook server listening on port ${PORT}`);
   console.log(`📝 Webhook URL: http://localhost:${PORT}/webhooks/rocketchat`);
 });

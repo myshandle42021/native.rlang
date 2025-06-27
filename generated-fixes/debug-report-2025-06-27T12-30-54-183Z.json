@@ -1,0 +1,348 @@
+{
+  "timestamp": "2025-06-27T12:30:54.183Z",
+  "system_health": {
+    "overall_score": 50,
+    "status": "degraded",
+    "key_metrics": {
+      "total_events": 794,
+      "success_rate": 1,
+      "avg_response_time": 0,
+      "error_frequency": 0.646095717884131,
+      "agent_performance": [
+        {
+          "agent_id": "bootstrap-policies",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 513
+        },
+        {
+          "agent_id": "rcd-bootstrap-check",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "rcd-core",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        },
+        {
+          "agent_id": "system-doctor",
+          "success_rate": 1,
+          "avg_response_time": 0,
+          "error_count": 0
+        }
+      ],
+      "top_errors": [
+        {
+          "id": "error_0_1751027454169",
+          "error_type": "validation_error_added",
+          "frequency": 468,
+          "first_seen": "2025-06-27T12:11:20.076Z",
+          "last_seen": "2025-06-27T12:11:29.342Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_1_1751027454169",
+          "error_type": "optional_module_missing",
+          "frequency": 44,
+          "first_seen": "2025-06-27T12:11:30.342Z",
+          "last_seen": "2025-06-27T12:11:31.249Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "context_patterns": {
+            "error": "${item.error}",
+            "event": "optional_module_missing",
+            "module": "${item.name}"
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_2_1751027454169",
+          "error_type": "validation_error_added",
+          "frequency": 44,
+          "first_seen": "2025-06-27T12:11:29.470Z",
+          "last_seen": "2025-06-27T12:11:30.324Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Critical module missing: ${item.name} - ${item.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "critical"
+        },
+        {
+          "id": "error_3_1751027454169",
+          "error_type": "validation_error_added",
+          "frequency": 1,
+          "first_seen": "2025-06-27T12:11:20.035Z",
+          "last_seen": "2025-06-27T12:11:20.035Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "context_patterns": {
+            "error": "Database unhealthy: ${input.health_result.error}",
+            "event": "validation_error_added",
+            "total_errors": 37
+          },
+          "severity": "warning"
+        },
+        {
+          "id": "error_4_1751027454169",
+          "error_type": "database_unhealthy",
+          "frequency": 1,
+          "first_seen": "2025-06-27T12:11:20.017Z",
+          "last_seen": "2025-06-27T12:11:20.017Z",
+          "affected_agents": [
+            "bootstrap-policies"
+          ],
+          "error_details": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "context_patterns": {
+            "error": "${input.health_result.error}",
+            "event": "database_unhealthy"
+          },
+          "severity": "critical"
+        }
+      ]
+    }
+  },
+  "errors_found": [
+    {
+      "id": "error_0_1751027454159",
+      "error_type": "validation_error_added",
+      "frequency": 468,
+      "first_seen": "2025-06-27T12:11:20.076Z",
+      "last_seen": "2025-06-27T12:11:29.342Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Cannot access ${item.path} for ${operation.operation}: ${operation.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_1_1751027454159",
+      "error_type": "optional_module_missing",
+      "frequency": 44,
+      "first_seen": "2025-06-27T12:11:30.342Z",
+      "last_seen": "2025-06-27T12:11:31.249Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "context_patterns": {
+        "error": "${item.error}",
+        "event": "optional_module_missing",
+        "module": "${item.name}"
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_2_1751027454159",
+      "error_type": "validation_error_added",
+      "frequency": 44,
+      "first_seen": "2025-06-27T12:11:29.470Z",
+      "last_seen": "2025-06-27T12:11:30.324Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Critical module missing: ${item.name} - ${item.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "critical"
+    },
+    {
+      "id": "error_3_1751027454159",
+      "error_type": "validation_error_added",
+      "frequency": 1,
+      "first_seen": "2025-06-27T12:11:20.035Z",
+      "last_seen": "2025-06-27T12:11:20.035Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "context_patterns": {
+        "error": "Database unhealthy: ${input.health_result.error}",
+        "event": "validation_error_added",
+        "total_errors": 37
+      },
+      "severity": "warning"
+    },
+    {
+      "id": "error_4_1751027454159",
+      "error_type": "database_unhealthy",
+      "frequency": 1,
+      "first_seen": "2025-06-27T12:11:20.017Z",
+      "last_seen": "2025-06-27T12:11:20.017Z",
+      "affected_agents": [
+        "bootstrap-policies"
+      ],
+      "error_details": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "context_patterns": {
+        "error": "${input.health_result.error}",
+        "event": "database_unhealthy"
+      },
+      "severity": "critical"
+    }
+  ],
+  "failure_patterns": [
+    {
+      "pattern_type": "validation_error_spike",
+      "description": "Massive validation error spike: 8208 errors in 48h",
+      "occurrences": 8208,
+      "impact_score": 0.95,
+      "suggested_fix": "Review bootstrap policies and validation rules - this is critical",
+      "confidence": 0.98
+    },
+    {
+      "pattern_type": "agent_error_clustering",
+      "description": "Error clustering in 1 agents",
+      "occurrences": 513,
+      "impact_score": 0.7,
+      "suggested_fix": "Review agent configurations and error handling",
+      "confidence": 0.85
+    },
+    {
+      "pattern_type": "missing_module_configuration",
+      "description": "Multiple optional modules missing",
+      "occurrences": 44,
+      "impact_score": 0.6,
+      "suggested_fix": "Check module dependencies and configuration files",
+      "confidence": 0.9
+    }
+  ],
+  "ai_analysis": {
+    "summary": "Claude AI unavailable - using fallback analysis",
+    "root_causes": [
+      {
+        "cause": "Analysis system offline",
+        "confidence": 1,
+        "evidence": [
+          "Claude API unavailable"
+        ]
+      }
+    ],
+    "impact_assessment": {
+      "severity": "high",
+      "affected_components": [
+        "auto-debug system"
+      ],
+      "user_impact": "Reduced diagnostic capabilities"
+    },
+    "recommended_actions": [
+      {
+        "action": "Manually review highest frequency errors",
+        "priority": 1,
+        "effort": "high",
+        "risk": "low"
+      }
+    ],
+    "patterns_identified": [
+      "manual_review_required"
+    ]
+  },
+  "generated_fixes": [],
+  "priority_order": [
+    {
+      "issue": "validation_error_added",
+      "priority_score": 90,
+      "reasoning": "Frequency: 468, Severity: critical",
+      "urgency": "immediate",
+      "estimated_fix_time": "30 minutes"
+    },
+    {
+      "issue": "optional_module_missing",
+      "priority_score": 80,
+      "reasoning": "Frequency: 44, Severity: critical",
+      "urgency": "immediate",
+      "estimated_fix_time": "30 minutes"
+    },
+    {
+      "issue": "validation_error_added",
+      "priority_score": 70,
+      "reasoning": "Frequency: 44, Severity: critical",
+      "urgency": "immediate",
+      "estimated_fix_time": "30 minutes"
+    },
+    {
+      "issue": "validation_error_added",
+      "priority_score": 60,
+      "reasoning": "Frequency: 1, Severity: warning",
+      "urgency": "normal",
+      "estimated_fix_time": "30 minutes"
+    },
+    {
+      "issue": "database_unhealthy",
+      "priority_score": 50,
+      "reasoning": "Frequency: 1, Severity: critical",
+      "urgency": "immediate",
+      "estimated_fix_time": "30 minutes"
+    }
+  ],
+  "recommendations": [
+    "Manually review highest frequency errors",
+    "Manual system review required"
+  ],
+  "execution_time_ms": 59
+}

@@ -1,0 +1,99 @@
+🚀 Starting ROL3 Agent System...
+📡 Connecting to database...
+🔗 Database connection established
+✅ Database connected: { healthy: true, timestamp: 2025-06-27T13:55:03.201Z }
+🧠 Registering LLM function...
+✅ LLM function registered
+🔧 Registering bootstrap functions...
+✅ Bootstrap functions registered
+🔗 Registering RCD functions...
+✅ RCD functions registered
+🏗️ Setting up core infrastructure...
+✅ Core infrastructure initialized
+🔗 Checking RCD metadata bootstrap...
+🔍 RCD Bootstrap Result: {
+  success: false,
+  error: 'RocketChat sendMessage failed: rocketchat credentials not configured for user system. Please set up credentials first.',
+  trace: []
+}
+🔄 Attempting fallback initialization...
+🔍 Fallback Result: {
+  success: false,
+  error: 'RocketChat sendMessage failed: rocketchat credentials not configured for user system. Please set up credentials first.',
+  trace: []
+}
+🤷 Continuing without RCD metadata...
+🔗 Starting webhook server...
+✅ Webhook server started on port 3001
+🧠 Starting system bootstrap...
+🔗 RocketChat webhook server listening on port 3001
+📝 Webhook URL: http://localhost:3001/webhooks/rocketchat
+🔄 Falling back to system health check...
+🏥 Running system health validation...
+✅ System health check result: {
+  success: true,
+  result: {
+    success: true,
+    status: 'healthy',
+    timestamp: '2025-06-27T13:55:24.138Z'
+  },
+  context: {
+    user: 'system',
+    channel: undefined,
+    clientId: 'default',
+    agentId: 'system-doctor',
+    operation: 'system_health_check',
+    timestamp: '2025-06-27T13:55:24.138Z',
+    input: {
+      user: 'system',
+      channel: undefined,
+      client_id: 'default',
+      agent_id: 'system-doctor',
+      startup: true
+    },
+    memory: {
+      timestamp: '2025-06-27T13:55:24.138Z',
+      execution_id: 'exec_mcevjyp6_yekajf',
+      user: 'system',
+      channel: undefined,
+      client_id: 'default',
+      agent_id: 'system-doctor',
+      startup: true,
+      logged: true,
+      entry: [Object],
+      'tamr.log': [Object],
+      success: true,
+      status: 'healthy',
+      return: [Object]
+    },
+    trace: [],
+    metadata: {
+      execution_id: 'exec_mcevjyp6_yekajf',
+      created_at: '2025-06-27T13:55:24.138Z',
+      context_version: '2.0'
+    },
+    context: { user: 'system', clientId: 'default', agentId: 'system-doctor' }
+  },
+  trace: [
+    {
+      step: 'tamr.log',
+      input: [Object],
+      output: [Object],
+      timestamp: '2025-06-27T13:55:24.157Z',
+      success: true
+    },
+    {
+      step: 'return',
+      input: [Object],
+      output: [Object],
+      timestamp: '2025-06-27T13:55:24.157Z',
+      success: true
+    }
+  ]
+}
+🎉 ROL3 system is ALIVE and ready!
+📊 Startup Summary:
+  - Database: ✅ Connected
+  - RCD: ✅ Bootstrapped
+  - Webhook: ✅ Running on port 3001
+  - System: ✅ Operational
