@@ -48,6 +48,11 @@ export async function completeWithOpenAI(args: any, context: RLangContext) {
 
     Do NOT return explanations or wrapper structures. Return ONLY the filled template.`;
 
+    console.log("🔍 DEBUG - Template being sent to LLM:");
+    console.log("=".repeat(50));
+    console.log(template);
+    console.log("=".repeat(50));
+
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: fullPrompt }],
