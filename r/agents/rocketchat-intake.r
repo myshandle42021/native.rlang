@@ -73,8 +73,8 @@ operations:
 
     # Enrich context with user profile and preferences
     - rcd_enrich_user_context: {
-        user_id: "${message_context.user_id}",
-        message_history: "${message_context.history}",
+        user_id: "${extracted_message_context.user_id}",
+        message_history: "${extracted_message_context.history}",
         preferences: "${user_preferences}"
       }
 
@@ -92,7 +92,7 @@ operations:
                 "agent_creation", "system_monitoring", "api_integration",
                 "data_processing", "workflow_automation", "learning_feedback"
               ],
-              user_id: "${message_context.user_id}"
+              user_id: "${extracted_message_context.user_id}"
             }
           }
 
