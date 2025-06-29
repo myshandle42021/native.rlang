@@ -30,16 +30,23 @@ export async function completeWithOpenAI(args: any, context: RLangContext) {
   try {
     const client = getOpenAIClient();
 
-    const fullPrompt = `
-${system_prompt}
+    const fullPrompt = `You are an intent extraction specialist. I will give you a user request and a template. Your job is to fill out the template with specific values based on the user's request.
 
-TEMPLATE TO FILL:
-${template}
+    IMPORTANT: Do not return the template structure or metadata. Fill in the actual values and return ONLY the filled template.
 
-USER REQUEST: "${user_input}"
+    USER REQUEST: "${user_input}"
 
-Please fill in the template above based on the user's request. Output as ${output_format}.
-`;
+    TEMPLATE TO FILL OUT:
+    ${template}
+
+    INSTRUCTIONS:
+    1. Replace ALL placeholder values (like "[customer_service|email_assistant...]") with actual values
+    2. Replace ALL bracketed instructions with real content
+    3. Based on the user request, determine what type of agent they need
+    4. Fill in ALL the required fields
+    5. Return the filled template as valid ${output_format}
+
+    Do NOT return explanations or wrapper structures. Return ONLY the filled template.`;
 
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
