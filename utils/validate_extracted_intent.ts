@@ -8,31 +8,81 @@ export async function undefined(args: any, context: RLangContext) {
   return validateExtractedIntent(args, context);
 }
 
+// Helper function to safely stringify objects with circular references
+function safeStringify(obj: any, maxDepth = 3): string {
+  const seen = new WeakSet();
+
+  return JSON.stringify(
+    obj,
+    (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return "[Circular Reference]";
+        }
+        seen.add(value);
+      }
+      return value;
+    },
+    2,
+  );
+}
+
 export async function validateExtractedIntent(
   args: any,
   context: RLangContext,
 ) {
   try {
-    // 🔍 DEBUG LOGGING - Add this at the beginning
+    // 🔍 DEBUG LOGGING - Use safe stringify
+    console.log("🔍 DEBUG - Raw validation args:");
+    console.log(safeStringify(args));
+
+    console.log("🔍 DEBUG - Context input:");
+    console.log(safeStringify(context.input));
+
+    // Don't log full context memory due to circular references
+    console.log("🔍 DEBUG - Context metadata:");
     console.log(
-      "🔍 DEBUG - Raw validation args:",
-      JSON.stringify(args, null, 2),
-    );
-    console.log(
-      "🔍 DEBUG - Context input:",
-      JSON.stringify(context.input, null, 2),
-    );
-    console.log(
-      "🔍 DEBUG - Context memory:",
-      JSON.stringify(context.memory, null, 2),
+      safeStringify({
+        user: context.user,
+        agentId: context.agentId,
+        operation: context.operation,
+        timestamp: context.timestamp,
+      }),
     );
 
     const extracted = args.extracted || args;
     console.log("🔍 DEBUG - Extracted data type:", typeof extracted);
-    console.log(
-      "🔍 DEBUG - Extracted data:",
-      JSON.stringify(extracted, null, 2),
-    );
+
+    // Check if extracted is still a template variable
+    if (typeof extracted === "string" && extracted.includes("${")) {
+      console.log(
+        "⚠️ DEBUG - Extracted contains template variables:",
+        extracted,
+      );
+      console.log(
+        "🔧 DEBUG - This suggests LLM response wasn't properly resolved",
+      );
+
+      // Return a basic validation result for now
+      return {
+        incomplete_fields: ["llm_response_not_resolved"],
+        completeness_score: 0,
+        confidence: 0.5,
+        validated_intent: {
+          agent_requirements: {
+            agent_type: "integration",
+            primary_purpose: "Unknown - LLM response not resolved",
+          },
+          system_integrations: {
+            required_services: ["to_be_determined"],
+          },
+        },
+        debug_info: {
+          issue: "LLM response contains unresolved template variables",
+          raw_extracted: extracted,
+        },
+      };
+    }
 
     // Parse if it's a string (YAML/JSON response from LLM)
     let intentData = extracted;
@@ -41,18 +91,12 @@ export async function validateExtractedIntent(
       try {
         // Try JSON first
         intentData = JSON.parse(extracted);
-        console.log(
-          "🔍 DEBUG - Successfully parsed as JSON:",
-          JSON.stringify(intentData, null, 2),
-        );
+        console.log("🔍 DEBUG - Successfully parsed as JSON");
       } catch {
         console.log("🔍 DEBUG - JSON parse failed, trying YAML...");
         // If JSON fails, try basic YAML parsing
         intentData = parseBasicYaml(extracted);
-        console.log(
-          "🔍 DEBUG - YAML parsed result:",
-          JSON.stringify(intentData, null, 2),
-        );
+        console.log("🔍 DEBUG - YAML parsed result");
       }
     } else {
       console.log("🔍 DEBUG - Extracted is not string, using as-is");
@@ -82,86 +126,80 @@ export async function validateExtractedIntent(
         validation.incomplete_fields.push(field);
         console.log(`❌ DEBUG - Missing field: ${field}`);
       } else {
-        console.log(
-          `✅ DEBUG - Found field: ${field} = ${JSON.stringify(fieldValue)}`,
-        );
+        console.log(`✅ DEBUG - Found field: ${field}`);
       }
     }
 
-    console.log("🔍 DEBUG - Incomplete fields:", validation.incomplete_fields);
-
     // Calculate completeness score
     const totalFields = requiredFields.length;
-    const completeFields = totalFields - validation.incomplete_fields.length;
-    validation.completeness_score = completeFields / totalFields;
-
-    console.log(`🔍 DEBUG - Complete fields: ${completeFields}/${totalFields}`);
-    console.log(
-      `🔍 DEBUG - Completeness score: ${validation.completeness_score}`,
+    const completedFields = totalFields - validation.incomplete_fields.length;
+    validation.completeness_score = Math.round(
+      (completedFields / totalFields) * 100,
     );
 
-    // Enhance with defaults if missing
+    console.log(
+      `🎯 DEBUG - Validation complete: ${validation.completeness_score}% (${completedFields}/${totalFields} fields)`,
+    );
+
     if (validation.incomplete_fields.length > 0) {
-      console.log("🔍 DEBUG - Enhancing with defaults...");
-      validation.validated_intent = enhanceWithDefaults(intentData, args);
-      console.log(
-        "🔍 DEBUG - Enhanced intent:",
-        JSON.stringify(validation.validated_intent, null, 2),
-      );
+      console.log("📋 DEBUG - Missing fields:", validation.incomplete_fields);
     }
-
-    console.log(
-      `✅ Intent validation: ${validation.completeness_score * 100}% complete`,
-    );
-    console.log(
-      "🔍 DEBUG - Final validation result:",
-      JSON.stringify(validation, null, 2),
-    );
 
     return validation;
   } catch (error) {
     console.error("❌ DEBUG - Intent validation error:", error);
     console.error(
       "❌ DEBUG - Error stack:",
-      error instanceof Error ? error.stack : "No stack trace",
+      error instanceof Error ? error.stack : String(error),
     );
+
     return {
       incomplete_fields: ["validation_error"],
       completeness_score: 0,
       confidence: 0.1,
+      validated_intent: {},
       error: error instanceof Error ? error.message : String(error),
-      validated_intent: args.extracted || {},
     };
   }
 }
 
+// Basic YAML parser for simple cases
 function parseBasicYaml(yamlString: string): any {
-  // Basic YAML parser for agent requirements
-  const lines = yamlString.split("\n");
   const result: any = {};
-  let currentObject: any = result;
-  let currentPath: string[] = [];
+  const lines = yamlString.split("\n");
+
+  let currentObject = result;
+  let objectStack: any[] = [result];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
 
-    const indent = line.length - line.trimStart().length;
-    const colonIndex = trimmed.indexOf(":");
+    const indentLevel = (line.match(/^(\s*)/)?.[1]?.length || 0) / 2;
 
-    if (colonIndex > 0) {
-      const key = trimmed.substring(0, colonIndex).trim();
-      const value = trimmed.substring(colonIndex + 1).trim();
+    // Adjust object stack based on indentation
+    while (objectStack.length > indentLevel + 1) {
+      objectStack.pop();
+    }
+    currentObject = objectStack[objectStack.length - 1];
 
-      // Adjust path based on indent
-      if (indent === 0) {
-        currentPath = [key];
-        currentObject = result;
-        setNestedValue(result, key, value || {});
+    if (trimmed.includes(":")) {
+      const [key, ...valueParts] = trimmed.split(":");
+      const value = valueParts.join(":").trim();
+
+      if (value === "" || value === "{}" || value === "[]") {
+        // New object or array
+        currentObject[key.trim()] = {};
+        objectStack.push(currentObject[key.trim()]);
+      } else if (value.startsWith("[") && value.endsWith("]")) {
+        // Array value
+        const arrayContent = value.slice(1, -1);
+        currentObject[key.trim()] = arrayContent
+          .split(",")
+          .map((item) => item.trim().replace(/['"]/g, ""));
       } else {
-        // Nested property
-        const nestedPath = [...currentPath, key];
-        setNestedValue(result, nestedPath.join("."), value || key);
+        // Simple value
+        currentObject[key.trim()] = value.replace(/['"]/g, "");
       }
     }
   }
