@@ -575,6 +575,21 @@ function getHttpMethod(endpointName: string): string {
 function resolveValue(value: any, context: RLangContext): any {
   if (value === undefined || value === null) return value;
 
+  // 🎯 NEW: Handle arrays recursively
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveValue(item, context));
+  }
+
+  // 🎯 NEW: Handle objects recursively
+  if (typeof value === "object" && value !== null) {
+    const resolved: any = {};
+    for (const [key, val] of Object.entries(value)) {
+      resolved[key] = resolveValue(val, context);
+    }
+    return resolved;
+  }
+
+  // Handle strings with template variables (existing logic)
   if (typeof value === "string" && value.includes("${")) {
     try {
       // Check if this is a pure variable reference (entire string is just ${variable})
@@ -594,18 +609,6 @@ function resolveValue(value: any, context: RLangContext): any {
     } catch (err) {
       return value;
     }
-  }
-
-  if (Array.isArray(value)) {
-    return value.map((item) => resolveValue(item, context));
-  }
-
-  if (typeof value === "object" && value !== null) {
-    const resolved: any = {};
-    for (const [key, val] of Object.entries(value)) {
-      resolved[key] = resolveValue(val, context);
-    }
-    return resolved;
   }
 
   return value;
