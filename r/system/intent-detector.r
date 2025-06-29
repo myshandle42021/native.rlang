@@ -21,7 +21,7 @@ operations:
         output_format: "yaml"
       }
     - validate_extracted_intent: {
-        extracted: "${llm_response}",
+        extracted: "${llm_complete}",
         completeness_check: true
       }
     - condition:
