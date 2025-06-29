@@ -16,7 +16,7 @@ operations:
       }
     - llm.complete: {
         system_prompt: "You are an intent extraction specialist. Fill in this template based on the user's request:",
-        template: "${intent_template}",
+        template: "${build_intent_template}",
         user_input: "${input.text}",
         output_format: "yaml"
       }
