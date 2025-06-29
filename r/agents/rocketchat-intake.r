@@ -83,7 +83,7 @@ operations:
         - "r/system/intent-detector.r"
         - "analyze_user_request"
         - {
-            text: "${message_context.text}",
+            text: "${extract_message_context.text}",
             context: {
               conversation_type: "agent_creation_and_system_interaction",
               user_profile: "${enriched_context.user_profile}",
