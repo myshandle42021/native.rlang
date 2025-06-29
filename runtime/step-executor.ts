@@ -611,29 +611,42 @@ function resolveValue(value: any, context: RLangContext): any {
   return value;
 }
 
-// NEW helper function to get values by path
 function getValueByPath(path: string, context: RLangContext): any {
-  const keys = path.split(".");
-  let result: any = context;
-
   // Try different context sources in order of priority
   const sources = [
-    context.memory, // Try memory first (where set_memory stores values)
+    context.memory, // Try memory first (where llm.complete is stored)
     context.input, // Then input
     context, // Then context root
   ];
 
   for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+
+    // 🎯 CRITICAL FIX: Try literal key first (for keys like "llm.complete")
+    if (source.hasOwnProperty(path)) {
+      const value = source[path];
+      if (value !== undefined) {
+        return value;
+      }
+    }
+
+    // If literal key doesn't exist, try nested path access
+    const keys = path.split(".");
     let current = source;
     let found = true;
 
-    // Navigate the path
+    // Navigate the nested path
     for (const key of keys) {
       if (current === null || current === undefined) {
         found = false;
         break;
       }
-      current = current[key];
+      if (typeof current === "object" && key in current) {
+        current = current[key];
+      } else {
+        found = false;
+        break;
+      }
     }
 
     if (found && current !== undefined) {
